@@ -317,7 +317,7 @@
           <p id="user-line" class="who">Checking session...</p>
         </div>
         <div class="top-actions">
-          <button id="refresh-btn" class="btn btn-ghost">Refresh</button>
+          <button id="refresh-btn" class="btn btn-ghost">Sync now</button>
           <button id="logout-btn" class="btn btn-primary">Log out</button>
         </div>
       </header>
@@ -432,6 +432,11 @@
       let habitRateChart = null;
       let dailyTrendChart = null;
       let streakChart = null;
+      let habitsChannel = null;
+      let entriesChannel = null;
+      let realtimeSyncTimer = null;
+      let isSyncing = false;
+      let syncQueued = false;
 
       function formatDate(date) {
         const d = new Date(date);
@@ -542,6 +547,71 @@
         }
 
         entries = entriesData || [];
+      }
+
+      async function syncFromServer() {
+        if (isSyncing) {
+          syncQueued = true;
+          return;
+        }
+
+        isSyncing = true;
+        try {
+          await loadHabitsAndEntries();
+          renderHabits();
+          renderAnalytics();
+        } finally {
+          isSyncing = false;
+          if (syncQueued) {
+            syncQueued = false;
+            await syncFromServer();
+          }
+        }
+      }
+
+      function scheduleRealtimeSync() {
+        if (realtimeSyncTimer) return;
+        realtimeSyncTimer = setTimeout(async () => {
+          realtimeSyncTimer = null;
+          await syncFromServer();
+        }, 250);
+      }
+
+      function teardownRealtime() {
+        if (habitsChannel) {
+          supabase.removeChannel(habitsChannel);
+          habitsChannel = null;
+        }
+        if (entriesChannel) {
+          supabase.removeChannel(entriesChannel);
+          entriesChannel = null;
+        }
+        if (realtimeSyncTimer) {
+          clearTimeout(realtimeSyncTimer);
+          realtimeSyncTimer = null;
+        }
+      }
+
+      function setupRealtime() {
+        teardownRealtime();
+
+        habitsChannel = supabase
+          .channel(`habits-${currentUser.id}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "habits", filter: `user_id=eq.${currentUser.id}` },
+            scheduleRealtimeSync,
+          )
+          .subscribe();
+
+        entriesChannel = supabase
+          .channel(`habit-entries-${currentUser.id}`)
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "habit_entries", filter: `user_id=eq.${currentUser.id}` },
+            scheduleRealtimeSync,
+          )
+          .subscribe();
       }
 
       function renderHabits() {
@@ -871,14 +941,13 @@
 
       function bindEvents() {
         document.getElementById("logout-btn").addEventListener("click", async () => {
+          teardownRealtime();
           await supabase.auth.signOut();
           window.location.href = "/login.html";
         });
 
         document.getElementById("refresh-btn").addEventListener("click", async () => {
-          await loadHabitsAndEntries();
-          renderHabits();
-          renderAnalytics();
+          await syncFromServer();
         });
 
         habitForm.addEventListener("submit", handleCreateHabit);
@@ -932,9 +1001,9 @@
         if (!user) return;
 
         bindEvents();
-        await loadHabitsAndEntries();
-        renderHabits();
-        renderAnalytics();
+        setupRealtime();
+        window.addEventListener("beforeunload", teardownRealtime);
+        await syncFromServer();
       }
 
       init();
