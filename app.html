@@ -698,7 +698,7 @@
                 </div>
                 <div>
                   <label for="habit-target-count">Target count</label>
-                  <input id="habit-target-count" type="number" min="1" max="30" value="5" />
+                  <input id="habit-target-count" type="number" min="1" max="7" value="5" />
                 </div>
               </div>
 
@@ -711,7 +711,7 @@
                     <option value="custom">Custom timeline</option>
                   </select>
                 </div>
-                <div>
+                <div id="habit-custom-days-wrap" style="display: none">
                   <label for="habit-custom-days">Custom days</label>
                   <input id="habit-custom-days" type="number" min="1" max="90" value="21" disabled />
                 </div>
@@ -974,6 +974,7 @@
       const habitCancelBtn = document.getElementById("habit-cancel-btn");
       const habitTimeline = document.getElementById("habit-timeline");
       const habitCustomDays = document.getElementById("habit-custom-days");
+      const habitCustomDaysWrap = document.getElementById("habit-custom-days-wrap");
 
       const profileHandleInput = document.getElementById("profile-handle");
       const profileStatus = document.getElementById("profile-status");
@@ -1157,6 +1158,12 @@
 
       function todayISO() {
         return formatDate(new Date());
+      }
+
+      function updateCustomDaysVisibility() {
+        const show = habitTimeline.value === "custom";
+        habitCustomDaysWrap.style.display = show ? "block" : "none";
+        habitCustomDays.disabled = !show;
       }
 
       function habitStatus(habit) {
@@ -2081,7 +2088,7 @@
         const timeline = cadence === 7 ? "weekly" : cadence === 14 ? "biweekly" : "custom";
         document.getElementById("habit-timeline").value = timeline;
         document.getElementById("habit-custom-days").value = String(cadence === 7 || cadence === 14 ? 21 : cadence);
-        document.getElementById("habit-custom-days").disabled = timeline !== "custom";
+        updateCustomDaysVisibility();
         applyMultiSelectValues(document.getElementById("habit-tags"), habit.tags || []);
       }
 
@@ -2091,7 +2098,7 @@
         document.getElementById("habit-target-count").value = "5";
         document.getElementById("habit-timeline").value = "weekly";
         document.getElementById("habit-custom-days").value = "21";
-        document.getElementById("habit-custom-days").disabled = true;
+        updateCustomDaysVisibility();
         document.getElementById("habit-category").value = CATEGORY_OPTIONS[0];
         applyMultiSelectValues(document.getElementById("habit-tags"), []);
 
@@ -2118,8 +2125,8 @@
           setStatus(formStatus, "Name is required.");
           return;
         }
-        if (!Number.isFinite(targetCount) || targetCount < 1 || targetCount > 30) {
-          setStatus(formStatus, "Target count must be between 1 and 30.");
+        if (!Number.isFinite(targetCount) || targetCount < 1 || targetCount > 7) {
+          setStatus(formStatus, "Target count must be between 1 and 7.");
           return;
         }
         if (!Number.isFinite(cadenceDays) || cadenceDays < 1 || cadenceDays > 90) {
@@ -2596,7 +2603,7 @@
         friendAnalyticsRange.addEventListener("change", renderFriendAnalytics);
 
         habitTimeline.addEventListener("change", () => {
-          habitCustomDays.disabled = habitTimeline.value !== "custom";
+          updateCustomDaysVisibility();
         });
 
         habitForm.addEventListener("submit", handleCreateOrUpdateHabit);
@@ -2759,6 +2766,7 @@
         await syncFromServer();
         viewWeekStart = startOfWeek(new Date());
         resetHabitForm();
+        updateCustomDaysVisibility();
         if (switchTab) switchTab(userSettings.defaultStartTab || "habits");
       }
 
