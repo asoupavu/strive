@@ -416,7 +416,6 @@
             <div class="week-nav">
               <button id="prev-week" class="btn btn-ghost">Prev week</button>
               <div id="week-label" class="week-label"></div>
-              <button id="next-week" class="btn btn-ghost">Next week</button>
             </div>
             <div id="habit-list"></div>
           </main>
@@ -1012,11 +1011,6 @@
 
         document.getElementById("prev-week").addEventListener("click", () => {
           viewWeekStart = addDays(viewWeekStart, -7);
-          renderHabits();
-        });
-
-        document.getElementById("next-week").addEventListener("click", () => {
-          viewWeekStart = addDays(viewWeekStart, 7);
           renderHabits();
         });
 
