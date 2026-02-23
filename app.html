@@ -944,6 +944,18 @@
                 </div>
                 <input id="setting-sync-hint" type="checkbox" style="width: 18px; height: 18px" />
               </div>
+
+              <div class="setting-row" style="align-items: flex-start">
+                <div>
+                  <p class="setting-title">see blocked people</p>
+                  <p class="setting-sub">Review and unblock users.</p>
+                </div>
+                <button id="setting-toggle-blocked" class="btn btn-ghost btn-small">see blocked people</button>
+              </div>
+
+              <div id="settings-blocked-wrap" style="display: none">
+                <ul id="settings-blocked-list" class="list"></ul>
+              </div>
             </div>
             <div id="settings-status" class="settings-status"></div>
           </div>
@@ -1005,6 +1017,9 @@
       const settingDefaultRange = document.getElementById("setting-default-range");
       const settingStartTab = document.getElementById("setting-start-tab");
       const settingSyncHint = document.getElementById("setting-sync-hint");
+      const settingToggleBlocked = document.getElementById("setting-toggle-blocked");
+      const settingsBlockedWrap = document.getElementById("settings-blocked-wrap");
+      const settingsBlockedList = document.getElementById("settings-blocked-list");
 
       const CATEGORY_OPTIONS = [
         "Health",
@@ -1051,6 +1066,7 @@
 
       let requests = [];
       let friends = [];
+      let blockedUsers = [];
       let selectedFriendId = null;
       let selectedFriendHabits = [];
       let selectedFriendEntries = [];
@@ -1494,9 +1510,17 @@
           .eq("blocker_id", currentUser.id);
         if (!blockedError) {
           const blockedIds = (blockedRows || []).map((r) => r.blocked_id);
+          blockedUsers = [];
           if (blockedIds.length) {
             const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", blockedIds);
             const blockedProfiles = p || [];
+            blockedUsers = (blockedRows || [])
+              .map((r) => ({
+                user_id: r.blocked_id,
+                block_record_id: r.id,
+                handle: blockedProfiles.find((bp) => bp.user_id === r.blocked_id)?.handle || null,
+              }))
+              .sort((a, b) => (a.handle || "").localeCompare(b.handle || ""));
             friends = friends.map((f) => ({
               ...f,
               is_blocked: blockedIds.includes(f.user_id),
@@ -1506,6 +1530,8 @@
           } else {
             friends = friends.map((f) => ({ ...f, is_blocked: false, block_record_id: null }));
           }
+        } else {
+          blockedUsers = [];
         }
       }
 
@@ -1555,6 +1581,7 @@
           renderAnalytics();
           renderRequests();
           renderFriends();
+          renderBlockedUsersSettings();
 
           if (selectedFriendId) {
             await loadFriendHabits(selectedFriendId);
@@ -1584,7 +1611,7 @@
       function setupRealtime() {
         teardownRealtime();
 
-        const tables = ["habits", "habit_entries", "profiles", "friendships"];
+        const tables = ["habits", "habit_entries", "profiles", "friendships", "blocked_users"];
         for (const table of tables) {
           const channel = supabase
             .channel(`rt-${table}-${currentUser.id}`)
@@ -1665,12 +1692,12 @@
                     <div class="pill-row">
                       ${habit.category ? `<span class="pill">${escapeHtml(habit.category)}</span>` : ""}
                       ${(habit.tags || []).map((t) => `<span class="pill">#${escapeHtml(t)}</span>`).join("")}
-                      <span class="pill ${habit.visibility === "private" ? "private" : ""}">${habit.visibility === "private" ? "Hidden" : "Shared"}</span>
+                      <span class="pill ${habit.visibility === "private" ? "private" : ""}">${habit.visibility === "private" ? "hidden" : "shared"}</span>
                       <span class="pill ${status === "paused" ? "paused" : status === "stopped" ? "stopped" : ""}">${escapeHtml(status)}</span>
-                      <span class="pill">Target ${targetCount}/${cadenceDays}d</span>
-                      <span class="pill">Window ${windowDone}/${targetCount}</span>
-                      <span class="pill">Week ${weekDone}/${weekActive}</span>
-                      ${status === "stopped" && habit.stop_reason ? `<span class="pill stopped">Reason: ${escapeHtml(habit.stop_reason)}</span>` : ""}
+                      <span class="pill">target ${targetCount}/${cadenceDays}d</span>
+                      <span class="pill">window ${windowDone}/${targetCount}</span>
+                      <span class="pill">week ${weekDone}/${weekActive}</span>
+                      ${status === "stopped" && habit.stop_reason ? `<span class="pill stopped">reason: ${escapeHtml(habit.stop_reason)}</span>` : ""}
                     </div>
                     <div class="progress-track"><div class="progress-bar" style="width: ${pct}%"></div></div>
                   </div>
@@ -1679,15 +1706,15 @@
                     <button class="icon-btn ${habit.is_pinned ? "active" : ""}" title="${habit.is_pinned ? "Pinned" : "Unpinned"}" data-action="toggle-pin" data-habit-id="${habit.id}">&#128204;</button>
                     ${
                       status === "active"
-                        ? `<button class="btn btn-ghost btn-small" data-action="pause-habit" data-habit-id="${habit.id}">Pause</button><button class="btn btn-danger btn-small" data-action="stop-habit" data-habit-id="${habit.id}">Stop</button>`
+                        ? `<button class="btn btn-ghost btn-small" title="pause" data-action="pause-habit" data-habit-id="${habit.id}">⏸️</button>`
                         : status === "paused"
-                          ? `<button class="btn btn-ghost btn-small" data-action="resume-habit" data-habit-id="${habit.id}">Resume</button><button class="btn btn-danger btn-small" data-action="stop-habit" data-habit-id="${habit.id}">Stop</button>`
-                          : `<button class="btn btn-ghost btn-small" data-action="restart-habit" data-habit-id="${habit.id}">Restart</button>`
+                          ? `<button class="btn btn-ghost btn-small" title="resume" data-action="resume-habit" data-habit-id="${habit.id}">▶️</button>`
+                          : `<button class="btn btn-ghost btn-small" title="restart" data-action="restart-habit" data-habit-id="${habit.id}">▶️</button>`
                     }
-                    <button class="btn btn-ghost btn-small" data-action="move-up" data-habit-id="${habit.id}">Up</button>
-                    <button class="btn btn-ghost btn-small" data-action="move-down" data-habit-id="${habit.id}">Down</button>
-                    <button class="btn btn-ghost btn-small" data-action="edit" data-habit-id="${habit.id}">Edit</button>
-                    <button class="btn btn-danger btn-small" data-action="delete" data-habit-id="${habit.id}">Delete</button>
+                    <button class="btn btn-ghost btn-small" title="move up" data-action="move-up" data-habit-id="${habit.id}">⬆️</button>
+                    <button class="btn btn-ghost btn-small" title="move down" data-action="move-down" data-habit-id="${habit.id}">⬇️</button>
+                    <button class="btn btn-ghost btn-small" data-action="edit" data-habit-id="${habit.id}">edit</button>
+                    <button class="btn btn-danger btn-small" title="delete" data-action="delete" data-habit-id="${habit.id}">❌</button>
                   </div>
                 </div>
 
@@ -1967,6 +1994,20 @@
           .join("");
       }
 
+      function renderBlockedUsersSettings() {
+        if (!blockedUsers.length) {
+          settingsBlockedList.innerHTML = `<li class="empty">No blocked users.</li>`;
+          return;
+        }
+
+        settingsBlockedList.innerHTML = blockedUsers
+          .map((u) => {
+            const handle = u.handle ? `@${u.handle}` : "@unknown";
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="unblock-user" data-user-id="${u.user_id}">unblock</button></div></div></li>`;
+          })
+          .join("");
+      }
+
       function renderFriendHabits() {
         if (!selectedFriendId) {
           friendHabits.innerHTML = `<p class="empty">Select a friend to view shared habits.</p>`;
@@ -2180,7 +2221,7 @@
           target_per_week: Math.max(1, Math.round((targetCount * 7) / cadenceDays)),
           tags,
           visibility: "friends",
-          is_pinned: true,
+          is_pinned: false,
           sort_order: maxSort + 1,
           status: "active",
           stop_reason: null,
@@ -2548,6 +2589,19 @@
         showToast("Friend blocked", "success");
       }
 
+      async function unblockUser(userId) {
+        const blocked = blockedUsers.find((u) => u.user_id === userId);
+        if (!blocked?.block_record_id) return;
+
+        const { error } = await supabase.from("blocked_users").delete().eq("id", blocked.block_record_id).eq("blocker_id", currentUser.id);
+        if (error) {
+          showToast(error.message, "error");
+          return;
+        }
+        await syncFromServer();
+        showToast("User unblocked", "success");
+      }
+
       function bindTabs() {
         const tabHabits = document.getElementById("tab-habits");
         const tabAnalytics = document.getElementById("tab-analytics");
@@ -2691,10 +2745,6 @@
             await setHabitLifecycle(habitId, "active");
             return;
           }
-          if (action === "stop-habit") {
-            await setHabitLifecycle(habitId, "stopped");
-            return;
-          }
           if (action === "restart-habit") {
             await setHabitLifecycle(habitId, "active");
             return;
@@ -2728,6 +2778,12 @@
         settingSyncHint.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("showSyncHint", settingSyncHint.checked);
         });
+        settingToggleBlocked.addEventListener("click", () => {
+          const showing = settingsBlockedWrap.style.display !== "none";
+          settingsBlockedWrap.style.display = showing ? "none" : "block";
+          settingToggleBlocked.textContent = showing ? "see blocked people" : "hide blocked people";
+          if (!showing) renderBlockedUsersSettings();
+        });
 
         requestList.addEventListener("click", async (event) => {
           const target = event.target.closest("[data-action]");
@@ -2754,6 +2810,14 @@
           }
           if (target.dataset.action === "toggle-block-friend") {
             await toggleBlockFriend(target.dataset.friendId);
+          }
+        });
+
+        settingsBlockedList.addEventListener("click", async (event) => {
+          const target = event.target.closest("[data-action]");
+          if (!target) return;
+          if (target.dataset.action === "unblock-user") {
+            await unblockUser(target.dataset.userId);
           }
         });
       }
