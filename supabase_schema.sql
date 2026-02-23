@@ -60,6 +60,15 @@ create table if not exists public.friendships (
   unique (requester_id, addressee_id)
 );
 
+create table if not exists public.blocked_users (
+  id uuid primary key default gen_random_uuid(),
+  blocker_id uuid not null references auth.users(id) on delete cascade,
+  blocked_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  check (blocker_id <> blocked_id),
+  unique (blocker_id, blocked_id)
+);
+
 create index if not exists habits_user_created_idx on public.habits(user_id, created_at desc);
 create index if not exists habits_user_sort_idx on public.habits(user_id, is_pinned desc, sort_order asc, created_at desc);
 create index if not exists habits_visibility_user_idx on public.habits(user_id, visibility);
@@ -70,16 +79,20 @@ create index if not exists habit_entries_habit_date_idx on public.habit_entries(
 create index if not exists profiles_handle_idx on public.profiles(handle);
 create index if not exists friendships_requester_status_idx on public.friendships(requester_id, status);
 create index if not exists friendships_addressee_status_idx on public.friendships(addressee_id, status);
+create index if not exists blocked_users_blocker_idx on public.blocked_users(blocker_id, created_at desc);
+create index if not exists blocked_users_blocked_idx on public.blocked_users(blocked_id, created_at desc);
 
 alter table public.habits enable row level security;
 alter table public.habit_entries enable row level security;
 alter table public.profiles enable row level security;
 alter table public.friendships enable row level security;
+alter table public.blocked_users enable row level security;
 
 alter table public.habits force row level security;
 alter table public.habit_entries force row level security;
 alter table public.profiles force row level security;
 alter table public.friendships force row level security;
+alter table public.blocked_users force row level security;
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -183,6 +196,12 @@ alter policy habits_select_own
             or (f.addressee_id = auth.uid() and f.requester_id = habits.user_id)
           )
       )
+      and not exists (
+        select 1
+        from public.blocked_users b
+        where (b.blocker_id = habits.user_id and b.blocked_id = auth.uid())
+           or (b.blocker_id = auth.uid() and b.blocked_id = habits.user_id)
+      )
     )
   );
 
@@ -272,6 +291,12 @@ alter policy entries_select_own
               (f.requester_id = auth.uid() and f.addressee_id = habit_entries.user_id)
               or (f.addressee_id = auth.uid() and f.requester_id = habit_entries.user_id)
             )
+        )
+        and not exists (
+          select 1
+          from public.blocked_users b
+          where (b.blocker_id = habit_entries.user_id and b.blocked_id = auth.uid())
+             or (b.blocker_id = auth.uid() and b.blocked_id = habit_entries.user_id)
         )
     )
   );
@@ -423,6 +448,47 @@ begin
       on public.friendships
       for delete
       using (auth.uid() = requester_id or auth.uid() = addressee_id);
+  end if;
+end $$;
+
+-- Blocked users policies
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'blocked_users' and policyname = 'blocked_users_select_involved'
+  ) then
+    create policy blocked_users_select_involved
+      on public.blocked_users
+      for select
+      using (auth.uid() = blocker_id or auth.uid() = blocked_id);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'blocked_users' and policyname = 'blocked_users_insert_blocker'
+  ) then
+    create policy blocked_users_insert_blocker
+      on public.blocked_users
+      for insert
+      with check (auth.uid() = blocker_id);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'blocked_users' and policyname = 'blocked_users_delete_blocker'
+  ) then
+    create policy blocked_users_delete_blocker
+      on public.blocked_users
+      for delete
+      using (auth.uid() = blocker_id);
   end if;
 end $$;
 

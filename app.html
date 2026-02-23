@@ -70,6 +70,11 @@
         gap: 0.45rem;
       }
 
+      .loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
       .btn {
         border: 0;
         border-radius: 8px;
@@ -559,6 +564,33 @@
         font-size: 0.84rem;
       }
 
+      .toast-wrap {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        display: grid;
+        gap: 0.45rem;
+        z-index: 1200;
+        max-width: min(360px, 90vw);
+      }
+
+      .toast {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 10px;
+        padding: 0.55rem 0.65rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        font-size: 0.82rem;
+      }
+
+      .toast.success {
+        border-color: #a7d9bf;
+      }
+
+      .toast.error {
+        border-color: #f4c7c2;
+      }
+
       @media (max-width: 1080px) {
         .layout,
         .social-layout {
@@ -850,6 +882,7 @@
         </div>
       </section>
     </div>
+    <div id="toast-wrap" class="toast-wrap"></div>
 
     <script type="module">
       import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -888,6 +921,7 @@
       const friendHabits = document.getElementById("friend-habits");
       const syncHint = document.getElementById("sync-hint");
       const settingsStatus = document.getElementById("settings-status");
+      const toastWrap = document.getElementById("toast-wrap");
 
       const settingAccent = document.getElementById("setting-accent");
       const settingDensity = document.getElementById("setting-density");
@@ -961,6 +995,7 @@
       let syncTimer = null;
       let isSyncing = false;
       let syncQueued = false;
+      let loadingCounter = 0;
 
       function formatDate(date) {
         const d = new Date(date);
@@ -1024,6 +1059,34 @@
 
       function setStatus(el, msg) {
         el.textContent = msg;
+      }
+
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        toastWrap.appendChild(toast);
+        setTimeout(() => {
+          toast.remove();
+        }, 2600);
+      }
+
+      function setLoading(isLoading) {
+        if (isLoading) {
+          loadingCounter += 1;
+        } else {
+          loadingCounter = Math.max(0, loadingCounter - 1);
+        }
+        document.body.classList.toggle("loading", loadingCounter > 0);
+      }
+
+      async function withLoading(fn) {
+        setLoading(true);
+        try {
+          return await fn();
+        } finally {
+          setLoading(false);
+        }
       }
 
       function todayISO() {
@@ -1303,6 +1366,26 @@
             .filter(Boolean)
             .sort((a, b) => (a.display_name || a.handle || "").localeCompare(b.display_name || b.handle || ""));
         }
+
+        const { data: blockedRows, error: blockedError } = await supabase
+          .from("blocked_users")
+          .select("id, blocker_id, blocked_id, created_at")
+          .eq("blocker_id", currentUser.id);
+        if (!blockedError) {
+          const blockedIds = (blockedRows || []).map((r) => r.blocked_id);
+          if (blockedIds.length) {
+            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", blockedIds);
+            const blockedProfiles = p || [];
+            friends = friends.map((f) => ({
+              ...f,
+              is_blocked: blockedIds.includes(f.user_id),
+              block_record_id: (blockedRows || []).find((r) => r.blocked_id === f.user_id)?.id || null,
+              _profile: blockedProfiles.find((bp) => bp.user_id === f.user_id) || null,
+            }));
+          } else {
+            friends = friends.map((f) => ({ ...f, is_blocked: false, block_record_id: null }));
+          }
+        }
       }
 
       async function loadFriendHabits(friendId) {
@@ -1340,6 +1423,7 @@
         }
 
         isSyncing = true;
+        setLoading(true);
         try {
           await ensureProfile();
           await loadHabitsAndEntries();
@@ -1354,7 +1438,11 @@
           if (selectedFriendId) {
             await loadFriendHabits(selectedFriendId);
           }
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : "Sync failed";
+          showToast(msg, "error");
         } finally {
+          setLoading(false);
           isSyncing = false;
           if (syncQueued) {
             syncQueued = false;
@@ -1736,7 +1824,7 @@
           .map((f) => {
             const name = f.display_name || f.handle || "Unknown";
             const handle = f.handle ? `@${f.handle}` : "";
-            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View habits</button></div></li>`;
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View</button><button class="btn btn-ghost btn-small" data-action="toggle-block-friend" data-friend-id="${f.user_id}">${f.is_blocked ? "Unblock" : "Block"}</button><button class="btn btn-danger btn-small" data-action="remove-friend" data-friend-id="${f.user_id}">Unfriend</button></div></div></li>`;
           })
           .join("");
       }
@@ -1860,40 +1948,42 @@
       }
 
       async function toggleDay(habitId, dayISO) {
-        const existing = getEntry(habitId, dayISO);
+        await withLoading(async () => {
+          const existing = getEntry(habitId, dayISO);
 
-        if (!existing) {
-          const { error } = await supabase.from("habit_entries").insert({
-            habit_id: habitId,
-            user_id: currentUser.id,
-            entry_date: dayISO,
-            completed: true,
-            note: null,
-          });
-          if (error) {
-            alert(error.message);
+          if (!existing) {
+            const { error } = await supabase.from("habit_entries").insert({
+              habit_id: habitId,
+              user_id: currentUser.id,
+              entry_date: dayISO,
+              completed: true,
+              note: null,
+            });
+            if (error) {
+              showToast(error.message, "error");
+              return;
+            }
+            await syncFromServer();
             return;
           }
+
+          const nextCompleted = !existing.completed;
+          if (!nextCompleted && !existing.note) {
+            const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
+            if (error) {
+              showToast(error.message, "error");
+              return;
+            }
+          } else {
+            const { error } = await supabase.from("habit_entries").update({ completed: nextCompleted }).eq("id", existing.id);
+            if (error) {
+              showToast(error.message, "error");
+              return;
+            }
+          }
+
           await syncFromServer();
-          return;
-        }
-
-        const nextCompleted = !existing.completed;
-        if (!nextCompleted && !existing.note) {
-          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
-          if (error) {
-            alert(error.message);
-            return;
-          }
-        } else {
-          const { error } = await supabase.from("habit_entries").update({ completed: nextCompleted }).eq("id", existing.id);
-          if (error) {
-            alert(error.message);
-            return;
-          }
-        }
-
-        await syncFromServer();
+        });
       }
 
       async function saveDayNote(habitId) {
@@ -1905,41 +1995,46 @@
         const note = noteInput.value.trim();
         selectedNoteDayByHabit.set(habitId, dayISO);
 
-        const existing = getEntry(habitId, dayISO);
-        if (!existing) {
-          if (!note) return;
-          const { error } = await supabase.from("habit_entries").insert({
-            habit_id: habitId,
-            user_id: currentUser.id,
-            entry_date: dayISO,
-            completed: false,
-            note,
-          });
-          if (error) {
-            alert(error.message);
+        await withLoading(async () => {
+          const existing = getEntry(habitId, dayISO);
+          if (!existing) {
+            if (!note) return;
+            const { error } = await supabase.from("habit_entries").insert({
+              habit_id: habitId,
+              user_id: currentUser.id,
+              entry_date: dayISO,
+              completed: false,
+              note,
+            });
+            if (error) {
+              showToast(error.message, "error");
+              return;
+            }
+            await syncFromServer();
+            showToast("Note saved", "success");
             return;
           }
-          await syncFromServer();
-          return;
-        }
 
-        if (!note && !existing.completed) {
-          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
-          if (error) {
-            alert(error.message);
+          if (!note && !existing.completed) {
+            const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
+            if (error) {
+              showToast(error.message, "error");
+              return;
+            }
+            await syncFromServer();
+            showToast("Note removed", "success");
             return;
           }
+
+          const { error } = await supabase.from("habit_entries").update({ note }).eq("id", existing.id);
+          if (error) {
+            showToast(error.message, "error");
+            return;
+          }
+
           await syncFromServer();
-          return;
-        }
-
-        const { error } = await supabase.from("habit_entries").update({ note }).eq("id", existing.id);
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        await syncFromServer();
+          showToast("Note saved", "success");
+        });
       }
 
       async function moveHabit(habitId, direction) {
@@ -1961,14 +2056,15 @@
           supabase.from("habits").update({ sort_order: aOrder }).eq("id", b.id).eq("user_id", currentUser.id),
         ];
 
-        const results = await Promise.all(updates);
-        const err = results.find((r) => r.error);
-        if (err?.error) {
-          alert(err.error.message);
-          return;
-        }
-
-        await syncFromServer();
+        await withLoading(async () => {
+          const results = await Promise.all(updates);
+          const err = results.find((r) => r.error);
+          if (err?.error) {
+            showToast(err.error.message, "error");
+            return;
+          }
+          await syncFromServer();
+        });
       }
 
       async function deleteHabit(habitId) {
@@ -1976,13 +2072,15 @@
         if (!habit) return;
         if (!window.confirm(`Delete habit "${habit.name}"? This removes its history.`)) return;
 
-        const { error } = await supabase.from("habits").delete().eq("id", habitId).eq("user_id", currentUser.id);
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        await syncFromServer();
+        await withLoading(async () => {
+          const { error } = await supabase.from("habits").delete().eq("id", habitId).eq("user_id", currentUser.id);
+          if (error) {
+            showToast(error.message, "error");
+            return;
+          }
+          await syncFromServer();
+          showToast("Habit deleted", "success");
+        });
       }
 
       async function saveProfile() {
@@ -2005,6 +2103,7 @@
         }
 
         setStatus(profileStatus, "Profile saved.");
+        showToast("Profile updated", "success");
         await syncFromServer();
       }
 
@@ -2092,11 +2191,12 @@
           .eq("addressee_id", currentUser.id);
 
         if (error) {
-          alert(error.message);
+          showToast(error.message, "error");
           return;
         }
 
         await syncFromServer();
+        showToast("Friend request accepted", "success");
       }
 
       async function denyRequest(requestId) {
@@ -2107,11 +2207,68 @@
           .eq("addressee_id", currentUser.id);
 
         if (error) {
-          alert(error.message);
+          showToast(error.message, "error");
           return;
         }
 
         await syncFromServer();
+        showToast("Friend request denied", "success");
+      }
+
+      async function removeFriend(friendId) {
+        const { data: rows, error } = await supabase
+          .from("friendships")
+          .select("id")
+          .or(`and(requester_id.eq.${currentUser.id},addressee_id.eq.${friendId},status.eq.accepted),and(requester_id.eq.${friendId},addressee_id.eq.${currentUser.id},status.eq.accepted)`);
+
+        if (error) {
+          showToast(error.message, "error");
+          return;
+        }
+        if (!rows?.length) {
+          showToast("Friendship not found", "error");
+          return;
+        }
+
+        const ids = rows.map((r) => r.id);
+        const { error: delError } = await supabase.from("friendships").delete().in("id", ids);
+        if (delError) {
+          showToast(delError.message, "error");
+          return;
+        }
+        if (selectedFriendId === friendId) {
+          selectedFriendId = null;
+          friendHabits.innerHTML = `<p class="empty">Select a friend to view shared habits.</p>`;
+        }
+        await syncFromServer();
+        showToast("Friend removed", "success");
+      }
+
+      async function toggleBlockFriend(friendId) {
+        const friend = friends.find((f) => f.user_id === friendId);
+        if (!friend) return;
+
+        if (friend.is_blocked && friend.block_record_id) {
+          const { error } = await supabase.from("blocked_users").delete().eq("id", friend.block_record_id).eq("blocker_id", currentUser.id);
+          if (error) {
+            showToast(error.message, "error");
+            return;
+          }
+          await syncFromServer();
+          showToast("Friend unblocked", "success");
+          return;
+        }
+
+        const { error } = await supabase.from("blocked_users").insert({
+          blocker_id: currentUser.id,
+          blocked_id: friendId,
+        });
+        if (error) {
+          showToast(error.message, "error");
+          return;
+        }
+        await syncFromServer();
+        showToast("Friend blocked", "success");
       }
 
       function bindTabs() {
@@ -2217,7 +2374,7 @@
               .eq("id", habitId)
               .eq("user_id", currentUser.id);
             if (error) {
-              alert(error.message);
+              showToast(error.message, "error");
               return;
             }
             await syncFromServer();
@@ -2229,7 +2386,7 @@
             const next = habit.visibility === "private" ? "friends" : "private";
             const { error } = await supabase.from("habits").update({ visibility: next }).eq("id", habitId).eq("user_id", currentUser.id);
             if (error) {
-              alert(error.message);
+              showToast(error.message, "error");
               return;
             }
             await syncFromServer();
@@ -2286,9 +2443,19 @@
         });
 
         friendsList.addEventListener("click", async (event) => {
-          const btn = event.target.closest("[data-action='view-friend']");
-          if (!btn) return;
-          await loadFriendHabits(btn.dataset.friendId);
+          const target = event.target.closest("[data-action]");
+          if (!target) return;
+          if (target.dataset.action === "view-friend") {
+            await loadFriendHabits(target.dataset.friendId);
+            return;
+          }
+          if (target.dataset.action === "remove-friend") {
+            await removeFriend(target.dataset.friendId);
+            return;
+          }
+          if (target.dataset.action === "toggle-block-friend") {
+            await toggleBlockFriend(target.dataset.friendId);
+          }
         });
       }
 
