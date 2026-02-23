@@ -468,6 +468,60 @@
         gap: 0.7rem;
       }
 
+      .settings-list {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .setting-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.45rem 0.5rem;
+        background: #fff;
+      }
+
+      .setting-title {
+        margin: 0;
+        font-size: 0.84rem;
+      }
+
+      .setting-sub {
+        margin: 0.14rem 0 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .settings-status {
+        min-height: 1rem;
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      body[data-density="comfortable"] .habit-card {
+        padding: 0.74rem;
+      }
+
+      body[data-density="comfortable"] .habit-card + .habit-card {
+        margin-top: 0.62rem;
+      }
+
+      body[data-density="comfortable"] .day-btn {
+        min-height: 46px;
+      }
+
+      body.hide-descriptions .habit-desc {
+        display: none;
+      }
+
+      body.hide-progress .progress-track {
+        display: none;
+      }
+
       .list {
         margin: 0;
         padding: 0;
@@ -538,6 +592,7 @@
           <p id="user-line" class="who">Checking session...</p>
         </div>
         <div class="top-actions">
+          <span id="sync-hint" class="helper" style="align-self: center; margin: 0">Realtime on</span>
           <button id="refresh-btn" class="btn btn-ghost">Sync now</button>
           <button id="logout-btn" class="btn btn-primary">Log out</button>
         </div>
@@ -691,14 +746,98 @@
       <section id="view-settings" class="panel" style="display: none">
         <div class="settings-grid">
           <div class="card">
-            <h2 class="section-title">Defaults</h2>
-            <p class="helper">New habits default to pinned and visible to friends. You can toggle both on each habit card.</p>
-            <p class="helper">Categories and tags are now fixed selections for cleaner analytics and filtering.</p>
+            <h2 class="section-title">Appearance</h2>
+            <div class="settings-list">
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Accent color</p>
+                  <p class="setting-sub">Primary UI highlight color.</p>
+                </div>
+                <select id="setting-accent" style="width: 150px">
+                  <option value="#c24d2c">Sunset Orange</option>
+                  <option value="#0f766e">Teal</option>
+                  <option value="#2563eb">Blue</option>
+                  <option value="#be185d">Rose</option>
+                  <option value="#4f46e5">Indigo</option>
+                  <option value="#15803d">Green</option>
+                </select>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Density</p>
+                  <p class="setting-sub">Compact or comfortable spacing.</p>
+                </div>
+                <select id="setting-density" style="width: 150px">
+                  <option value="compact">Compact</option>
+                  <option value="comfortable">Comfortable</option>
+                </select>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Show descriptions</p>
+                  <p class="setting-sub">Display habit description lines in cards.</p>
+                </div>
+                <input id="setting-show-descriptions" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Show progress bars</p>
+                  <p class="setting-sub">Display completion bars inside habit cards.</p>
+                </div>
+                <input id="setting-show-progress" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+            </div>
           </div>
+
           <div class="card">
-            <h2 class="section-title">Account</h2>
-            <p class="helper">Profile and friend management are available in the Social tab.</p>
-            <p class="helper">Use Sync now if you want an immediate manual refresh in addition to realtime updates.</p>
+            <h2 class="section-title">Behavior</h2>
+            <div class="settings-list">
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Week starts on Sunday</p>
+                  <p class="setting-sub">Switch habit week navigation baseline.</p>
+                </div>
+                <input id="setting-week-sunday" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Default analytics range</p>
+                  <p class="setting-sub">Applied whenever Analytics tab opens.</p>
+                </div>
+                <select id="setting-default-range" style="width: 150px">
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="all">All time</option>
+                </select>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Default startup tab</p>
+                  <p class="setting-sub">Tab shown first after login.</p>
+                </div>
+                <select id="setting-start-tab" style="width: 150px">
+                  <option value="habits">Habits</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="social">Social</option>
+                  <option value="settings">Settings</option>
+                </select>
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Auto-sync badge text</p>
+                  <p class="setting-sub">Show sync state helper near actions.</p>
+                </div>
+                <input id="setting-sync-hint" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+            </div>
+            <div id="settings-status" class="settings-status"></div>
           </div>
         </div>
       </section>
@@ -738,6 +877,17 @@
       const requestList = document.getElementById("request-list");
       const friendsList = document.getElementById("friends-list");
       const friendHabits = document.getElementById("friend-habits");
+      const syncHint = document.getElementById("sync-hint");
+      const settingsStatus = document.getElementById("settings-status");
+
+      const settingAccent = document.getElementById("setting-accent");
+      const settingDensity = document.getElementById("setting-density");
+      const settingShowDescriptions = document.getElementById("setting-show-descriptions");
+      const settingShowProgress = document.getElementById("setting-show-progress");
+      const settingWeekSunday = document.getElementById("setting-week-sunday");
+      const settingDefaultRange = document.getElementById("setting-default-range");
+      const settingStartTab = document.getElementById("setting-start-tab");
+      const settingSyncHint = document.getElementById("setting-sync-hint");
 
       const CATEGORY_OPTIONS = [
         "Health",
@@ -763,11 +913,22 @@
         "wellness",
       ];
 
+      const DEFAULT_SETTINGS = {
+        accentColor: "#c24d2c",
+        density: "compact",
+        showDescriptions: true,
+        showProgressBars: true,
+        weekStartsSunday: false,
+        defaultAnalyticsRange: "30",
+        defaultStartTab: "habits",
+        showSyncHint: true,
+      };
+
       let currentUser = null;
       let profile = null;
       let habits = [];
       let entries = [];
-      let viewWeekStart = startOfWeek(new Date());
+      let viewWeekStart = new Date();
       let editingHabitId = null;
       let selectedNoteDayByHabit = new Map();
 
@@ -776,6 +937,11 @@
       let selectedFriendId = null;
       let selectedFriendHabits = [];
       let selectedFriendEntries = [];
+      let userSettings = { ...DEFAULT_SETTINGS };
+      let settingsSaveTimer = null;
+      let settingsHydrating = false;
+      let currentTab = "habits";
+      let switchTab = null;
 
       let habitRateChart = null;
       let dailyTrendChart = null;
@@ -802,7 +968,7 @@
         const d = new Date(date);
         d.setHours(0, 0, 0, 0);
         const day = d.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
+        const diff = userSettings.weekStartsSunday ? -day : day === 0 ? -6 : 1 - day;
         d.setDate(d.getDate() + diff);
         return d;
       }
@@ -867,6 +1033,89 @@
 
       function defaultHandleFromEmail(email) {
         return (email || "user").split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";
+      }
+
+      function normalizeSettings(raw) {
+        const s = raw && typeof raw === "object" ? raw : {};
+        return {
+          accentColor: typeof s.accentColor === "string" ? s.accentColor : DEFAULT_SETTINGS.accentColor,
+          density: s.density === "comfortable" ? "comfortable" : "compact",
+          showDescriptions: typeof s.showDescriptions === "boolean" ? s.showDescriptions : DEFAULT_SETTINGS.showDescriptions,
+          showProgressBars: typeof s.showProgressBars === "boolean" ? s.showProgressBars : DEFAULT_SETTINGS.showProgressBars,
+          weekStartsSunday: typeof s.weekStartsSunday === "boolean" ? s.weekStartsSunday : DEFAULT_SETTINGS.weekStartsSunday,
+          defaultAnalyticsRange: ["7", "30", "90", "all"].includes(s.defaultAnalyticsRange)
+            ? s.defaultAnalyticsRange
+            : DEFAULT_SETTINGS.defaultAnalyticsRange,
+          defaultStartTab: ["habits", "analytics", "social", "settings"].includes(s.defaultStartTab)
+            ? s.defaultStartTab
+            : DEFAULT_SETTINGS.defaultStartTab,
+          showSyncHint: typeof s.showSyncHint === "boolean" ? s.showSyncHint : DEFAULT_SETTINGS.showSyncHint,
+        };
+      }
+
+      function accentSoftFromHex(hex) {
+        const clean = String(hex || "").replace("#", "");
+        if (clean.length !== 6) return "#f7ddcf";
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        const mix = (v) => Math.round(v + (255 - v) * 0.78);
+        return `rgb(${mix(r)} ${mix(g)} ${mix(b)})`;
+      }
+
+      function applySettingsToUi() {
+        document.documentElement.style.setProperty("--accent", userSettings.accentColor);
+        document.documentElement.style.setProperty("--accent-soft", accentSoftFromHex(userSettings.accentColor));
+
+        document.body.dataset.density = userSettings.density;
+        document.body.classList.toggle("hide-descriptions", !userSettings.showDescriptions);
+        document.body.classList.toggle("hide-progress", !userSettings.showProgressBars);
+
+        syncHint.style.display = userSettings.showSyncHint ? "inline" : "none";
+      }
+
+      function hydrateSettingsControls() {
+        settingsHydrating = true;
+        settingAccent.value = userSettings.accentColor;
+        settingDensity.value = userSettings.density;
+        settingShowDescriptions.checked = userSettings.showDescriptions;
+        settingShowProgress.checked = userSettings.showProgressBars;
+        settingWeekSunday.checked = userSettings.weekStartsSunday;
+        settingDefaultRange.value = userSettings.defaultAnalyticsRange;
+        settingStartTab.value = userSettings.defaultStartTab;
+        settingSyncHint.checked = userSettings.showSyncHint;
+        settingsHydrating = false;
+      }
+
+      async function persistSettings() {
+        if (!profile) return;
+        const { error } = await supabase
+          .from("profiles")
+          .update({ settings: userSettings })
+          .eq("user_id", currentUser.id);
+        if (error) {
+          setStatus(settingsStatus, `Save failed: ${error.message}`);
+          return;
+        }
+        setStatus(settingsStatus, `Saved ${new Date().toLocaleTimeString()}`);
+      }
+
+      function scheduleSettingsSave() {
+        if (settingsSaveTimer) clearTimeout(settingsSaveTimer);
+        setStatus(settingsStatus, "Saving...");
+        settingsSaveTimer = setTimeout(async () => {
+          settingsSaveTimer = null;
+          await persistSettings();
+        }, 300);
+      }
+
+      function updateSetting(key, value) {
+        userSettings = { ...userSettings, [key]: value };
+        applySettingsToUi();
+        viewWeekStart = startOfWeek(new Date());
+        renderHabits();
+        if (currentTab === "analytics") renderAnalytics();
+        scheduleSettingsSave();
       }
 
       function scoreToIntensity(score) {
@@ -950,6 +1199,7 @@
               user_id: currentUser.id,
               display_name: currentUser.email,
               handle: fallbackHandle,
+              settings: DEFAULT_SETTINGS,
             })
             .select()
             .single();
@@ -965,6 +1215,9 @@
 
         profileDisplayNameInput.value = profile.display_name || "";
         profileHandleInput.value = profile.handle || "";
+        userSettings = normalizeSettings(profile.settings);
+        hydrateSettingsControls();
+        applySettingsToUi();
       }
 
       async function loadHabitsAndEntries() {
@@ -1846,6 +2099,7 @@
         const viewSettings = document.getElementById("view-settings");
 
         function show(target) {
+          currentTab = target;
           tabHabits.classList.toggle("active", target === "habits");
           tabAnalytics.classList.toggle("active", target === "analytics");
           tabSocial.classList.toggle("active", target === "social");
@@ -1856,13 +2110,17 @@
           viewSocial.style.display = target === "social" ? "block" : "none";
           viewSettings.style.display = target === "settings" ? "block" : "none";
 
-          if (target === "analytics") renderAnalytics();
+          if (target === "analytics") {
+            analyticsRange.value = userSettings.defaultAnalyticsRange;
+            renderAnalytics();
+          }
         }
 
         tabHabits.addEventListener("click", () => show("habits"));
         tabAnalytics.addEventListener("click", () => show("analytics"));
         tabSocial.addEventListener("click", () => show("social"));
         tabSettings.addEventListener("click", () => show("settings"));
+        switchTab = show;
       }
 
       function bindEvents() {
@@ -1959,6 +2217,31 @@
         document.getElementById("save-profile-btn").addEventListener("click", saveProfile);
         document.getElementById("send-request-btn").addEventListener("click", sendFriendRequest);
 
+        settingAccent.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("accentColor", settingAccent.value);
+        });
+        settingDensity.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("density", settingDensity.value);
+        });
+        settingShowDescriptions.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("showDescriptions", settingShowDescriptions.checked);
+        });
+        settingShowProgress.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("showProgressBars", settingShowProgress.checked);
+        });
+        settingWeekSunday.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("weekStartsSunday", settingWeekSunday.checked);
+        });
+        settingDefaultRange.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("defaultAnalyticsRange", settingDefaultRange.value);
+        });
+        settingStartTab.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("defaultStartTab", settingStartTab.value);
+        });
+        settingSyncHint.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("showSyncHint", settingSyncHint.checked);
+        });
+
         requestList.addEventListener("click", async (event) => {
           const btn = event.target.closest("[data-action='accept-request']");
           if (!btn) return;
@@ -1986,7 +2269,9 @@
         window.addEventListener("beforeunload", teardownRealtime);
 
         await syncFromServer();
+        viewWeekStart = startOfWeek(new Date());
         resetHabitForm();
+        if (switchTab) switchTab(userSettings.defaultStartTab || "habits");
       }
 
       init();

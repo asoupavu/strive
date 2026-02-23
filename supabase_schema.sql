@@ -41,10 +41,13 @@ create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   handle text unique,
+  settings jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (handle is null or handle ~ '^[a-z0-9_]{3,30}$')
 );
+
+alter table public.profiles add column if not exists settings jsonb not null default '{}'::jsonb;
 
 create table if not exists public.friendships (
   id uuid primary key default gen_random_uuid(),
