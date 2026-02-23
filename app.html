@@ -805,9 +805,7 @@
       <section id="view-social" class="panel" style="display: none">
         <div class="social-layout">
           <aside class="card">
-            <h2 class="section-title">Profile</h2>
-            <label for="profile-display-name">Display name</label>
-            <input id="profile-display-name" maxlength="60" placeholder="Your name" />
+            <h2 class="section-title">Profile Handle</h2>
             <label for="profile-handle">Handle</label>
             <input id="profile-handle" maxlength="30" placeholder="your_handle" />
             <button id="save-profile-btn" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%">Save profile</button>
@@ -977,7 +975,6 @@
       const habitTimeline = document.getElementById("habit-timeline");
       const habitCustomDays = document.getElementById("habit-custom-days");
 
-      const profileDisplayNameInput = document.getElementById("profile-display-name");
       const profileHandleInput = document.getElementById("profile-handle");
       const profileStatus = document.getElementById("profile-status");
       const friendStatus = document.getElementById("friend-status");
@@ -1399,7 +1396,6 @@
           profile = data;
         }
 
-        profileDisplayNameInput.value = profile.display_name || "";
         profileHandleInput.value = profile.handle || "";
         userSettings = normalizeSettings(profile.settings);
         hydrateSettingsControls();
@@ -1446,7 +1442,7 @@
           const requesterIds = [...new Set((reqRows || []).map((r) => r.requester_id))];
           let requesterProfiles = [];
           if (requesterIds.length) {
-            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", requesterIds);
+            const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", requesterIds);
             requesterProfiles = p || [];
           }
           requests = (reqRows || []).map((r) => ({
@@ -1468,7 +1464,7 @@
           const friendIds = [...new Set((friendRows || []).map((r) => (r.requester_id === currentUser.id ? r.addressee_id : r.requester_id)))];
           let friendProfiles = [];
           if (friendIds.length) {
-            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", friendIds);
+            const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", friendIds);
             friendProfiles = p || [];
           }
           friends = friendIds
@@ -1484,7 +1480,7 @@
         if (!blockedError) {
           const blockedIds = (blockedRows || []).map((r) => r.blocked_id);
           if (blockedIds.length) {
-            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", blockedIds);
+            const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", blockedIds);
             const blockedProfiles = p || [];
             friends = friends.map((f) => ({
               ...f,
@@ -2354,7 +2350,6 @@
       }
 
       async function saveProfile() {
-        const display_name = profileDisplayNameInput.value.trim();
         const handle = profileHandleInput.value.trim().toLowerCase();
 
         if (!handle || !/^[a-z0-9_]{3,30}$/.test(handle)) {
@@ -2364,7 +2359,7 @@
 
         const { error } = await supabase
           .from("profiles")
-          .update({ display_name, handle })
+          .update({ handle })
           .eq("user_id", currentUser.id);
 
         if (error) {
