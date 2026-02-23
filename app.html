@@ -546,6 +546,13 @@
         align-items: center;
       }
 
+      .friend-actions {
+        display: flex;
+        gap: 0.3rem;
+        align-items: center;
+        justify-content: center;
+      }
+
       .empty {
         margin: 0;
         color: var(--muted);
@@ -1713,9 +1720,8 @@
 
         requestList.innerHTML = requests
           .map((r) => {
-            const name = r.requester_profile?.display_name || r.requester_profile?.handle || "Unknown";
-            const handle = r.requester_profile?.handle ? `@${r.requester_profile.handle}` : "";
-            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><button class="btn btn-ghost btn-small" data-action="accept-request" data-request-id="${r.id}">Accept</button></div></li>`;
+            const handle = r.requester_profile?.handle ? `@${r.requester_profile.handle}` : "@unknown";
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="accept-request" data-request-id="${r.id}">Accept</button><button class="btn btn-danger btn-small" data-action="deny-request" data-request-id="${r.id}">Deny</button></div></div></li>`;
           })
           .join("");
       }
@@ -2093,6 +2099,21 @@
         await syncFromServer();
       }
 
+      async function denyRequest(requestId) {
+        const { error } = await supabase
+          .from("friendships")
+          .update({ status: "declined", responded_at: new Date().toISOString() })
+          .eq("id", requestId)
+          .eq("addressee_id", currentUser.id);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await syncFromServer();
+      }
+
       function bindTabs() {
         const tabHabits = document.getElementById("tab-habits");
         const tabAnalytics = document.getElementById("tab-analytics");
@@ -2253,9 +2274,15 @@
         });
 
         requestList.addEventListener("click", async (event) => {
-          const btn = event.target.closest("[data-action='accept-request']");
-          if (!btn) return;
-          await acceptRequest(btn.dataset.requestId);
+          const target = event.target.closest("[data-action]");
+          if (!target) return;
+          if (target.dataset.action === "accept-request") {
+            await acceptRequest(target.dataset.requestId);
+            return;
+          }
+          if (target.dataset.action === "deny-request") {
+            await denyRequest(target.dataset.requestId);
+          }
         });
 
         friendsList.addEventListener("click", async (event) => {
