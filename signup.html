@@ -147,18 +147,28 @@
       formEl.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const email = document.getElementById("email").value;
+        const email = document.getElementById("email").value.trim().toLowerCase();
         const password = document.getElementById("password").value;
 
         signupBtn.disabled = true;
         setStatus("Creating account...");
 
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
 
         signupBtn.disabled = false;
 
         if (error) {
           setStatus(error.message);
+          return;
+        }
+
+        const alreadyRegistered =
+          !data?.session &&
+          !!data?.user &&
+          Array.isArray(data.user.identities) &&
+          data.user.identities.length === 0;
+        if (alreadyRegistered) {
+          setStatus("An account with this email already exists. Please log in.");
           return;
         }
 

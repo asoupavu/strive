@@ -147,7 +147,7 @@
       formEl.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const email = document.getElementById("email").value;
+        const email = document.getElementById("email").value.trim().toLowerCase();
         const password = document.getElementById("password").value;
 
         loginBtn.disabled = true;
