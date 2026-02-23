@@ -651,6 +651,7 @@
             <div class="week-nav">
               <button id="prev-week" class="btn btn-ghost">Prev week</button>
               <div id="week-label" class="week-label"></div>
+              <button id="next-week" class="btn btn-ghost">Next week</button>
               <span id="habit-count" class="pill">0 habits</span>
             </div>
 
@@ -857,6 +858,7 @@
       const habitList = document.getElementById("habit-list");
       const habitCount = document.getElementById("habit-count");
       const weekLabel = document.getElementById("week-label");
+      const nextWeekBtn = document.getElementById("next-week");
       const summaryGrid = document.getElementById("summary-grid");
       const analyticsRange = document.getElementById("analytics-range");
       const heatmapMonth = document.getElementById("heatmap-month");
@@ -1171,6 +1173,10 @@
       function weekTitle() {
         const end = addDays(viewWeekStart, 6);
         weekLabel.textContent = `${viewWeekStart.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+        const currentWeekStart = startOfWeek(new Date());
+        const isCurrentWeek = formatDate(viewWeekStart) === formatDate(currentWeekStart);
+        nextWeekBtn.disabled = isCurrentWeek;
+        nextWeekBtn.style.visibility = isCurrentWeek ? "hidden" : "visible";
       }
 
       async function requireUser() {
@@ -2133,6 +2139,10 @@
         document.getElementById("refresh-btn").addEventListener("click", syncFromServer);
         document.getElementById("prev-week").addEventListener("click", () => {
           viewWeekStart = addDays(viewWeekStart, -7);
+          renderHabits();
+        });
+        document.getElementById("next-week").addEventListener("click", () => {
+          viewWeekStart = addDays(viewWeekStart, 7);
           renderHabits();
         });
 
