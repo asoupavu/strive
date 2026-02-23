@@ -23,6 +23,11 @@ alter table public.habits add column if not exists tags text[] not null default 
 alter table public.habits add column if not exists visibility text not null default 'friends' check (visibility in ('friends', 'private'));
 alter table public.habits add column if not exists is_pinned boolean not null default false;
 alter table public.habits add column if not exists sort_order integer not null default 0;
+alter table public.habits add column if not exists target_count integer not null default 5 check (target_count between 1 and 30);
+alter table public.habits add column if not exists cadence_days integer not null default 7 check (cadence_days between 1 and 90);
+alter table public.habits add column if not exists status text not null default 'active' check (status in ('active', 'paused', 'stopped'));
+alter table public.habits add column if not exists stopped_at timestamptz;
+alter table public.habits add column if not exists stop_reason text;
 alter table public.habits alter column is_pinned set default true;
 
 create table if not exists public.habit_entries (

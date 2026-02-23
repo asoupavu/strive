@@ -217,7 +217,7 @@
 
       .toolbar {
         display: grid;
-        grid-template-columns: 1.25fr 1fr 1fr;
+        grid-template-columns: 1.25fr 1fr 1fr 1fr;
         gap: 0.45rem;
         margin-bottom: 0.5rem;
       }
@@ -280,6 +280,18 @@
 
       .pill.private {
         border-color: #f3d0cb;
+        background: #fde9e7;
+        color: #9f1f17;
+      }
+
+      .pill.paused {
+        border-color: #f2d4a9;
+        background: #fff3df;
+        color: #8a5b00;
+      }
+
+      .pill.stopped {
+        border-color: #f4c7c2;
         background: #fde9e7;
         color: #9f1f17;
       }
@@ -666,16 +678,23 @@
                   <select id="habit-category"></select>
                 </div>
                 <div>
-                  <label for="habit-target">Target / week</label>
-                  <select id="habit-target">
-                    <option value="7">7</option>
-                    <option value="6">6</option>
-                    <option value="5" selected>5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                    <option value="1">1</option>
+                  <label for="habit-target-count">Target count</label>
+                  <input id="habit-target-count" type="number" min="1" max="30" value="5" />
+                </div>
+              </div>
+
+              <div class="row-2">
+                <div>
+                  <label for="habit-timeline">Timeline</label>
+                  <select id="habit-timeline">
+                    <option value="weekly" selected>Weekly (7 days)</option>
+                    <option value="biweekly">Every 2 weeks (14 days)</option>
+                    <option value="custom">Custom timeline</option>
                   </select>
+                </div>
+                <div>
+                  <label for="habit-custom-days">Custom days</label>
+                  <input id="habit-custom-days" type="number" min="1" max="90" value="21" disabled />
                 </div>
               </div>
 
@@ -708,6 +727,13 @@
                 <option value="all">All visibility</option>
                 <option value="friends">Friends visible</option>
                 <option value="private">Private only</option>
+              </select>
+              <select id="filter-status">
+                <option value="active_paused" selected>Active + Paused</option>
+                <option value="active">Active only</option>
+                <option value="paused">Paused only</option>
+                <option value="stopped">Stopped only</option>
+                <option value="all">All statuses</option>
               </select>
             </div>
 
@@ -912,10 +938,13 @@
       const filterQuery = document.getElementById("filter-query");
       const filterCategory = document.getElementById("filter-category");
       const filterVisibility = document.getElementById("filter-visibility");
+      const filterStatus = document.getElementById("filter-status");
 
       const habitFormTitle = document.getElementById("habit-form-title");
       const habitSubmitBtn = document.getElementById("habit-submit-btn");
       const habitCancelBtn = document.getElementById("habit-cancel-btn");
+      const habitTimeline = document.getElementById("habit-timeline");
+      const habitCustomDays = document.getElementById("habit-custom-days");
 
       const profileDisplayNameInput = document.getElementById("profile-display-name");
       const profileHandleInput = document.getElementById("profile-handle");
@@ -1098,6 +1127,38 @@
         return formatDate(new Date());
       }
 
+      function habitStatus(habit) {
+        return habit.status || "active";
+      }
+
+      function habitTargetCount(habit) {
+        return Number(habit.target_count || habit.target_per_week || 5);
+      }
+
+      function habitCadenceDays(habit) {
+        return Number(habit.cadence_days || 7);
+      }
+
+      function habitWindowBounds(habit, refDate = new Date()) {
+        const cadenceDays = Math.max(1, habitCadenceDays(habit));
+        const anchor = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
+        const ref = dateFromISO(formatDate(refDate));
+        const daysSince = Math.max(0, Math.floor((ref - anchor) / 86400000));
+        const windowIndex = Math.floor(daysSince / cadenceDays);
+        const start = addDays(anchor, windowIndex * cadenceDays);
+        const end = addDays(start, cadenceDays - 1);
+        return { start, end, cadenceDays };
+      }
+
+      function expectedCompletionsForRange(habit, rangeStart, rangeEnd) {
+        const start = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
+        const effectiveStart = new Date(Math.max(start, rangeStart));
+        if (effectiveStart > rangeEnd) return 0;
+        const days = Math.floor((rangeEnd - effectiveStart) / 86400000) + 1;
+        const expected = (days * habitTargetCount(habit)) / Math.max(1, habitCadenceDays(habit));
+        return Math.max(1, Math.round(expected));
+      }
+
       function getEntry(habitId, entryDate) {
         return entries.find((e) => e.habit_id === habitId && e.entry_date === entryDate) || null;
       }
@@ -1205,6 +1266,10 @@
 
       function sortHabits(input) {
         return [...input].sort((a, b) => {
+          const rank = { active: 0, paused: 1, stopped: 2 };
+          if ((rank[habitStatus(a)] ?? 3) !== (rank[habitStatus(b)] ?? 3)) {
+            return (rank[habitStatus(a)] ?? 3) - (rank[habitStatus(b)] ?? 3);
+          }
           if ((a.is_pinned ? 1 : 0) !== (b.is_pinned ? 1 : 0)) {
             return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
           }
@@ -1219,10 +1284,15 @@
         const query = filterQuery.value.trim().toLowerCase();
         const category = filterCategory.value;
         const visibility = filterVisibility.value;
+        const status = filterStatus.value;
 
         return sortHabits(habits).filter((h) => {
           if (category !== "all" && (h.category || "").trim() !== category) return false;
           if (visibility !== "all" && h.visibility !== visibility) return false;
+          if (status === "active" && habitStatus(h) !== "active") return false;
+          if (status === "paused" && habitStatus(h) !== "paused") return false;
+          if (status === "stopped" && habitStatus(h) !== "stopped") return false;
+          if (status === "active_paused" && !["active", "paused"].includes(habitStatus(h))) return false;
           if (!query) return true;
 
           const hay = [h.name, h.description || "", h.category || "", ...(h.tags || [])].join(" ").toLowerCase();
@@ -1493,6 +1563,9 @@
 
         habitList.innerHTML = visibleHabits
           .map((habit) => {
+            const status = habitStatus(habit);
+            const targetCount = habitTargetCount(habit);
+            const cadenceDays = habitCadenceDays(habit);
             const completedAll = entries.filter((e) => e.habit_id === habit.id && e.completed).length;
             const start = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
             const totalDays = Math.max(1, Math.floor((dateFromISO(today) - start) / 86400000) + 1);
@@ -1504,13 +1577,18 @@
               return !!(e && e.completed);
             }).length;
 
+            const window = habitWindowBounds(habit, new Date());
+            const windowStartISO = formatDate(window.start);
+            const windowEndISO = formatDate(window.end);
+            const windowDone = entries.filter((e) => e.habit_id === habit.id && e.completed && e.entry_date >= windowStartISO && e.entry_date <= windowEndISO).length;
+
             const dayBtns = days
               .map((d) => {
                 const iso = formatDate(d);
                 const e = getEntry(habit.id, iso);
                 const done = !!(e && e.completed);
                 const hasNote = !!(e && e.note);
-                const outside = iso > today;
+                const outside = iso > today || status === "stopped";
                 const isToday = iso === today;
                 const cls = `day-btn${done ? " done" : ""}${hasNote ? " noted" : ""}${outside ? " outside" : ""}${isToday ? " today" : ""}`;
                 return `<button class="${cls}" data-action="toggle-day" data-habit-id="${habit.id}" data-day="${iso}" ${outside ? "disabled" : ""}><span>${d.toLocaleDateString([], {
@@ -1542,14 +1620,24 @@
                       ${habit.category ? `<span class="pill">${escapeHtml(habit.category)}</span>` : ""}
                       ${(habit.tags || []).map((t) => `<span class="pill">#${escapeHtml(t)}</span>`).join("")}
                       <span class="pill ${habit.visibility === "private" ? "private" : ""}">${habit.visibility === "private" ? "Hidden" : "Shared"}</span>
-                      <span class="pill">Target ${habit.target_per_week}/wk</span>
+                      <span class="pill ${status === "paused" ? "paused" : status === "stopped" ? "stopped" : ""}">${escapeHtml(status)}</span>
+                      <span class="pill">Target ${targetCount}/${cadenceDays}d</span>
+                      <span class="pill">Window ${windowDone}/${targetCount}</span>
                       <span class="pill">Week ${weekDone}/${weekActive}</span>
+                      ${status === "stopped" && habit.stop_reason ? `<span class="pill stopped">Reason: ${escapeHtml(habit.stop_reason)}</span>` : ""}
                     </div>
                     <div class="progress-track"><div class="progress-bar" style="width: ${pct}%"></div></div>
                   </div>
                   <div class="habit-actions">
                     <button class="icon-btn ${habit.visibility !== "private" ? "active" : ""}" title="${habit.visibility !== "private" ? "Visible to friends" : "Hidden from friends"}" data-action="toggle-visibility" data-habit-id="${habit.id}">&#128065;</button>
                     <button class="icon-btn ${habit.is_pinned ? "active" : ""}" title="${habit.is_pinned ? "Pinned" : "Unpinned"}" data-action="toggle-pin" data-habit-id="${habit.id}">&#128204;</button>
+                    ${
+                      status === "active"
+                        ? `<button class="btn btn-ghost btn-small" data-action="pause-habit" data-habit-id="${habit.id}">Pause</button><button class="btn btn-danger btn-small" data-action="stop-habit" data-habit-id="${habit.id}">Stop</button>`
+                        : status === "paused"
+                          ? `<button class="btn btn-ghost btn-small" data-action="resume-habit" data-habit-id="${habit.id}">Resume</button><button class="btn btn-danger btn-small" data-action="stop-habit" data-habit-id="${habit.id}">Stop</button>`
+                          : `<button class="btn btn-ghost btn-small" data-action="restart-habit" data-habit-id="${habit.id}">Restart</button>`
+                    }
                     <button class="btn btn-ghost btn-small" data-action="move-up" data-habit-id="${habit.id}">Up</button>
                     <button class="btn btn-ghost btn-small" data-action="move-down" data-habit-id="${habit.id}">Down</button>
                     <button class="btn btn-ghost btn-small" data-action="edit" data-habit-id="${habit.id}">Edit</button>
@@ -1560,9 +1648,9 @@
                 <div class="week-grid">${dayBtns}</div>
 
                 <div class="note-row">
-                  <select data-action="note-day" data-habit-id="${habit.id}">${daySelectOptions}</select>
-                  <input data-action="note-input" data-habit-id="${habit.id}" value="${escapeHtml(noteText)}" placeholder="Note for selected day" maxlength="200" />
-                  <button class="btn btn-ghost btn-small" data-action="save-note" data-habit-id="${habit.id}">Save note</button>
+                  <select data-action="note-day" data-habit-id="${habit.id}" ${status === "stopped" ? "disabled" : ""}>${daySelectOptions}</select>
+                  <input data-action="note-input" data-habit-id="${habit.id}" value="${escapeHtml(noteText)}" placeholder="Note for selected day" maxlength="200" ${status === "stopped" ? "disabled" : ""} />
+                  <button class="btn btn-ghost btn-small" data-action="save-note" data-habit-id="${habit.id}" ${status === "stopped" ? "disabled" : ""}>Save note</button>
                 </div>
               </article>
             `;
@@ -1655,7 +1743,7 @@
         for (const habit of sortHabits(habits)) {
           const habitCreated = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
           const effectiveStart = start ? new Date(Math.max(start, habitCreated)) : habitCreated;
-          const scheduled = Math.max(0, Math.floor((end - effectiveStart) / 86400000) + 1);
+          const scheduled = expectedCompletionsForRange(habit, effectiveStart, end);
           const completed = scopedEntries.filter((e) => e.habit_id === habit.id && e.completed).length;
           const rate = scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
 
@@ -1860,7 +1948,7 @@
                 return !!e;
               }).length;
               const totalDone = selectedFriendEntries.filter((x) => x.habit_id === h.id && x.completed).length;
-              return `<div class="list-item"><strong>${escapeHtml(h.name)}</strong><div class="helper">${escapeHtml(h.category || "No category")} | target ${h.target_per_week}/wk | week ${doneWeek}/7 | total ${totalDone}</div></div>`;
+              return `<div class="list-item"><strong>${escapeHtml(h.name)}</strong><div class="helper">${escapeHtml(h.category || "No category")} | target ${habitTargetCount(h)}/${habitCadenceDays(h)}d | week ${doneWeek}/7 | total ${totalDone}</div></div>`;
             })
             .join("")}
         `;
@@ -1875,14 +1963,22 @@
         document.getElementById("habit-name").value = habit.name || "";
         document.getElementById("habit-desc").value = habit.description || "";
         document.getElementById("habit-category").value = habit.category || CATEGORY_OPTIONS[0];
-        document.getElementById("habit-target").value = String(habit.target_per_week || 5);
+        document.getElementById("habit-target-count").value = String(habitTargetCount(habit));
+        const cadence = habitCadenceDays(habit);
+        const timeline = cadence === 7 ? "weekly" : cadence === 14 ? "biweekly" : "custom";
+        document.getElementById("habit-timeline").value = timeline;
+        document.getElementById("habit-custom-days").value = String(cadence === 7 || cadence === 14 ? 21 : cadence);
+        document.getElementById("habit-custom-days").disabled = timeline !== "custom";
         applyMultiSelectValues(document.getElementById("habit-tags"), habit.tags || []);
       }
 
       function resetHabitForm() {
         editingHabitId = null;
         habitForm.reset();
-        document.getElementById("habit-target").value = "5";
+        document.getElementById("habit-target-count").value = "5";
+        document.getElementById("habit-timeline").value = "weekly";
+        document.getElementById("habit-custom-days").value = "21";
+        document.getElementById("habit-custom-days").disabled = true;
         document.getElementById("habit-category").value = CATEGORY_OPTIONS[0];
         applyMultiSelectValues(document.getElementById("habit-tags"), []);
 
@@ -1899,18 +1995,37 @@
         const name = document.getElementById("habit-name").value.trim();
         const description = document.getElementById("habit-desc").value.trim();
         const category = document.getElementById("habit-category").value.trim();
-        const targetPerWeek = Number(document.getElementById("habit-target").value);
+        const targetCount = Number(document.getElementById("habit-target-count").value);
+        const timelineMode = document.getElementById("habit-timeline").value;
+        const customDays = Number(document.getElementById("habit-custom-days").value);
+        const cadenceDays = timelineMode === "weekly" ? 7 : timelineMode === "biweekly" ? 14 : customDays;
         const tags = selectedValues(document.getElementById("habit-tags"));
 
         if (!name) {
           setStatus(formStatus, "Name is required.");
           return;
         }
+        if (!Number.isFinite(targetCount) || targetCount < 1 || targetCount > 30) {
+          setStatus(formStatus, "Target count must be between 1 and 30.");
+          return;
+        }
+        if (!Number.isFinite(cadenceDays) || cadenceDays < 1 || cadenceDays > 90) {
+          setStatus(formStatus, "Timeline days must be between 1 and 90.");
+          return;
+        }
 
         if (editingHabitId) {
           const { error } = await supabase
             .from("habits")
-            .update({ name, description, category, target_per_week: targetPerWeek, tags })
+            .update({
+              name,
+              description,
+              category,
+              target_count: targetCount,
+              cadence_days: cadenceDays,
+              target_per_week: Math.max(1, Math.round((targetCount * 7) / cadenceDays)),
+              tags,
+            })
             .eq("id", editingHabitId)
             .eq("user_id", currentUser.id);
 
@@ -1932,11 +2047,16 @@
           name,
           description,
           category,
-          target_per_week: targetPerWeek,
+          target_count: targetCount,
+          cadence_days: cadenceDays,
+          target_per_week: Math.max(1, Math.round((targetCount * 7) / cadenceDays)),
           tags,
           visibility: "friends",
           is_pinned: true,
           sort_order: maxSort + 1,
+          status: "active",
+          stop_reason: null,
+          stopped_at: null,
           start_date: "2000-01-01",
           end_date: "2100-12-31",
         });
@@ -1953,6 +2073,11 @@
 
       async function toggleDay(habitId, dayISO) {
         await withLoading(async () => {
+          const habit = habits.find((h) => h.id === habitId);
+          if (habit && habitStatus(habit) === "stopped") {
+            showToast("Restart this habit before checking it off.", "error");
+            return;
+          }
           const existing = getEntry(habitId, dayISO);
 
           if (!existing) {
@@ -2085,6 +2210,30 @@
           await syncFromServer();
           showToast("Habit deleted", "success");
         });
+      }
+
+      async function setHabitLifecycle(habitId, nextStatus) {
+        const habit = habits.find((h) => h.id === habitId);
+        if (!habit) return;
+
+        let payload = { status: nextStatus };
+        if (nextStatus === "stopped") {
+          const reason = window.prompt("Optional stop reason:", habit.stop_reason || "");
+          payload = { status: "stopped", stopped_at: new Date().toISOString(), stop_reason: reason ? reason.trim() : null };
+        }
+        if (nextStatus === "active") {
+          payload = { status: "active", stopped_at: null, stop_reason: null };
+        }
+        if (nextStatus === "paused") {
+          payload = { status: "paused" };
+        }
+
+        const { error } = await supabase.from("habits").update(payload).eq("id", habitId).eq("user_id", currentUser.id);
+        if (error) {
+          showToast(error.message, "error");
+          return;
+        }
+        await syncFromServer();
       }
 
       async function saveProfile() {
@@ -2328,9 +2477,14 @@
         filterQuery.addEventListener("input", renderHabits);
         filterCategory.addEventListener("change", renderHabits);
         filterVisibility.addEventListener("change", renderHabits);
+        filterStatus.addEventListener("change", renderHabits);
 
         analyticsRange.addEventListener("change", renderAnalytics);
         heatmapMonth.addEventListener("change", renderHeatmap);
+
+        habitTimeline.addEventListener("change", () => {
+          habitCustomDays.disabled = habitTimeline.value !== "custom";
+        });
 
         habitForm.addEventListener("submit", handleCreateOrUpdateHabit);
         habitCancelBtn.addEventListener("click", resetHabitForm);
@@ -2399,6 +2553,22 @@
           }
           if (action === "move-down") {
             await moveHabit(habitId, "down");
+            return;
+          }
+          if (action === "pause-habit") {
+            await setHabitLifecycle(habitId, "paused");
+            return;
+          }
+          if (action === "resume-habit") {
+            await setHabitLifecycle(habitId, "active");
+            return;
+          }
+          if (action === "stop-habit") {
+            await setHabitLifecycle(habitId, "stopped");
+            return;
+          }
+          if (action === "restart-habit") {
+            await setHabitLifecycle(habitId, "active");
             return;
           }
         });
