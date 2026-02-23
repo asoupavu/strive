@@ -2115,11 +2115,8 @@
           return;
         }
 
-        const { data: target, error: targetErr } = await supabase
-          .from("profiles")
-          .select("user_id, handle, display_name")
-          .eq("handle", handle)
-          .maybeSingle();
+        const { data: targetRows, error: targetErr } = await supabase.rpc("lookup_profile_by_handle", { p_handle: handle });
+        const target = targetRows?.[0] || null;
 
         if (targetErr || !target) {
           setStatus(friendStatus, "Handle not found.");

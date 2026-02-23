@@ -6,6 +6,7 @@ This folder contains versioned SQL migrations for STRIVE.
 Apply files in lexical order:
 1. `20260223_000001_profiles_settings.sql`
 2. `20260223_000002_blocked_users.sql`
+3. `20260223_000003_policy_hardening.sql`
 
 ## Notes
 - Migrations are idempotent and safe to re-run.
