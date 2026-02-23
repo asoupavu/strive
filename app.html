@@ -3,14 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>STRIVE | App</title>
+    <title>STRIVE | Habit Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       :root {
-        --bg: #f4f1ea;
-        --panel: #fffaf2;
+        --bg: #f3efe8;
+        --panel: #fff9f1;
+        --panel-strong: #fff2e1;
         --text: #1f2a37;
+        --muted: #667085;
         --accent: #c24d2c;
-        --muted: #6b7280;
+        --accent-soft: #f7ddcf;
+        --ok: #197a4b;
+        --border: #ead7be;
       }
 
       * {
@@ -19,75 +24,920 @@
 
       body {
         margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--text);
         background: radial-gradient(circle at top left, #fff8ec 0%, var(--bg) 65%);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      .shell {
+        width: min(1100px, 94vw);
+        margin: 1.4rem auto 2rem;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+      }
+
+      .brand {
+        margin: 0;
+        font-size: 1.25rem;
+        letter-spacing: 0.06em;
+      }
+
+      .who {
+        margin: 0.2rem 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 0.6rem;
+      }
+
+      button,
+      select,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        padding: 0.6rem 0.9rem;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn-ghost {
+        border: 1px solid var(--border);
+        background: #fff;
         color: var(--text);
       }
 
-      main {
-        width: min(90vw, 640px);
-        background: var(--panel);
-        border: 1px solid #ecd8bf;
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
+      .tabs {
+        margin-top: 0.9rem;
+        display: flex;
+        gap: 0.5rem;
       }
 
-      h1 {
-        margin: 0;
-        font-size: 1.8rem;
-      }
-
-      #welcome {
-        margin-top: 0.85rem;
-        font-size: 1.1rem;
+      .tab {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        padding: 0.45rem 0.95rem;
+        cursor: pointer;
         color: var(--muted);
       }
 
-      button {
-        margin-top: 1rem;
-        padding: 0.7rem 1.1rem;
-        border: 0;
+      .tab.active {
+        background: var(--accent-soft);
+        color: var(--text);
+        border-color: #e5bf9f;
+      }
+
+      .panel {
+        margin-top: 0.9rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 1rem;
+      }
+
+      .form-card,
+      .list-card,
+      .chart-card,
+      .summary-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.9rem;
+      }
+
+      .section-title {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+      }
+
+      label {
+        display: block;
+        margin: 0.55rem 0 0.3rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid #d9c7ae;
         border-radius: 10px;
-        background: var(--accent);
-        color: #fff;
+        padding: 0.55rem 0.65rem;
+        background: #fff;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+
+      .hint {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        font-size: 0.83rem;
+      }
+
+      .status {
+        min-height: 1.3rem;
+        margin-top: 0.55rem;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      .habit-card {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 12px;
+        padding: 0.8rem;
+      }
+
+      .habit-card + .habit-card {
+        margin-top: 0.7rem;
+      }
+
+      .habit-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: start;
+      }
+
+      .habit-name {
+        margin: 0;
+        font-size: 1.03rem;
+      }
+
+      .muted {
+        color: var(--muted);
+        margin: 0.2rem 0 0;
+        font-size: 0.86rem;
+      }
+
+      .meta-pill {
+        background: var(--panel-strong);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+
+      .week-grid {
+        margin-top: 0.65rem;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(36px, 1fr));
+        gap: 0.35rem;
+      }
+
+      .day-btn {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 8px;
+        padding: 0.35rem 0.2rem;
+        text-align: center;
         cursor: pointer;
+        font-size: 0.73rem;
+      }
+
+      .day-btn.done {
+        background: #d9f2e5;
+        border-color: #a6d8bf;
+        color: #0c5a34;
+      }
+
+      .day-btn.outside {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .week-nav {
+        margin: 0.6rem 0 0.45rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+      }
+
+      .week-label {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .empty {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.6rem;
+      }
+
+      .metric {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 0.65rem;
+      }
+
+      .metric-label {
+        margin: 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .metric-value {
+        margin: 0.3rem 0 0;
+        font-size: 1.35rem;
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .analytics-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <main>
-      <h1>STRIVE</h1>
-      <p id="welcome">Checking session...</p>
-      <button id="logout">Log out</button>
-    </main>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <h1 class="brand">STRIVE Habit Tracker</h1>
+          <p id="user-line" class="who">Checking session...</p>
+        </div>
+        <div class="top-actions">
+          <button id="refresh-btn" class="btn btn-ghost">Refresh</button>
+          <button id="logout-btn" class="btn btn-primary">Log out</button>
+        </div>
+      </header>
+
+      <div class="tabs">
+        <button id="tab-habits" class="tab active">Habits</button>
+        <button id="tab-analytics" class="tab">Analytics</button>
+      </div>
+
+      <section id="view-habits" class="panel">
+        <div class="grid">
+          <aside class="form-card">
+            <h2 class="section-title">Add Habit</h2>
+            <form id="habit-form">
+              <label for="habit-name">Habit name</label>
+              <input id="habit-name" maxlength="80" required />
+
+              <label for="habit-desc">Description</label>
+              <textarea id="habit-desc" maxlength="240" placeholder="Optional"></textarea>
+
+              <div class="row">
+                <div>
+                  <label for="habit-start">Start date</label>
+                  <input id="habit-start" type="date" required />
+                </div>
+                <div>
+                  <label for="habit-end">End date</label>
+                  <input id="habit-end" type="date" required />
+                </div>
+              </div>
+
+              <label for="habit-target">Target days per week</label>
+              <select id="habit-target">
+                <option value="7">7 (daily)</option>
+                <option value="6">6</option>
+                <option value="5" selected>5</option>
+                <option value="4">4</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
+              </select>
+
+              <button class="btn btn-primary" style="margin-top: 0.8rem; width: 100%" type="submit">Create habit</button>
+              <p class="hint">Track completion by clicking day cells for each habit.</p>
+              <div id="form-status" class="status"></div>
+            </form>
+          </aside>
+
+          <main class="list-card">
+            <h2 class="section-title">Your Habits</h2>
+            <div class="week-nav">
+              <button id="prev-week" class="btn btn-ghost">Prev week</button>
+              <div id="week-label" class="week-label"></div>
+              <button id="next-week" class="btn btn-ghost">Next week</button>
+            </div>
+            <div id="habit-list"></div>
+          </main>
+        </div>
+      </section>
+
+      <section id="view-analytics" class="panel" style="display: none">
+        <div class="summary-card" style="margin-bottom: 0.8rem">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.7rem">
+            <h2 class="section-title" style="margin: 0">Insights</h2>
+            <select id="analytics-range" style="max-width: 170px">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
+          <div id="summary-grid" class="summary-grid"></div>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="chart-card">
+            <h3 class="section-title">Completion Rate by Habit</h3>
+            <canvas id="habit-rate-chart" height="160"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3 class="section-title">Daily Completion Trend</h3>
+            <canvas id="daily-trend-chart" height="160"></canvas>
+          </div>
+          <div class="chart-card" style="grid-column: 1 / -1">
+            <h3 class="section-title">Current Streaks</h3>
+            <canvas id="streak-chart" height="120"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
 
     <script type="module">
       import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-      // Must match index.html
       const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
 
-      const welcomeEl = document.getElementById("welcome");
-      const logoutBtn = document.getElementById("logout");
-
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
-        window.location.href = "/login.html";
-      } else {
-        welcomeEl.textContent = `Logged in as ${data.user.email}`;
+      const userLine = document.getElementById("user-line");
+      const formStatus = document.getElementById("form-status");
+      const habitForm = document.getElementById("habit-form");
+      const habitList = document.getElementById("habit-list");
+      const weekLabel = document.getElementById("week-label");
+      const analyticsRange = document.getElementById("analytics-range");
+      const summaryGrid = document.getElementById("summary-grid");
+
+      let currentUser = null;
+      let habits = [];
+      let entries = [];
+      let viewWeekStart = startOfWeek(new Date());
+      let habitRateChart = null;
+      let dailyTrendChart = null;
+      let streakChart = null;
+
+      function formatDate(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString().slice(0, 10);
       }
 
-      logoutBtn.addEventListener("click", async () => {
-        await supabase.auth.signOut();
-        window.location.href = "/login.html";
-      });
+      function dateFromISO(iso) {
+        const [y, m, d] = iso.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+
+      function startOfWeek(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        return d;
+      }
+
+      function addDays(date, n) {
+        const d = new Date(date);
+        d.setDate(d.getDate() + n);
+        return d;
+      }
+
+      function inRange(dateISO, startISO, endISO) {
+        return dateISO >= startISO && dateISO <= endISO;
+      }
+
+      function setFormStatus(msg) {
+        formStatus.textContent = msg;
+      }
+
+      function getEntryKey(habitId, dayISO) {
+        return `${habitId}::${dayISO}`;
+      }
+
+      function getEntriesMap() {
+        const map = new Map();
+        for (const e of entries) {
+          if (e.completed) {
+            map.set(getEntryKey(e.habit_id, e.entry_date), e);
+          }
+        }
+        return map;
+      }
+
+      function weekDates(start) {
+        const days = [];
+        for (let i = 0; i < 7; i += 1) {
+          days.push(addDays(start, i));
+        }
+        return days;
+      }
+
+      function friendlyRange(startISO, endISO) {
+        const s = dateFromISO(startISO);
+        const e = dateFromISO(endISO);
+        return `${s.toLocaleDateString()} - ${e.toLocaleDateString()}`;
+      }
+
+      function workingTodayISO() {
+        return formatDate(new Date());
+      }
+
+      function weekTitle() {
+        const end = addDays(viewWeekStart, 6);
+        weekLabel.textContent = `${viewWeekStart.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+      }
+
+      async function requireUser() {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user) {
+          window.location.href = "/login.html";
+          return null;
+        }
+        currentUser = data.user;
+        userLine.textContent = `Logged in as ${currentUser.email}`;
+        return data.user;
+      }
+
+      async function loadHabitsAndEntries() {
+        const { data: habitsData, error: habitsError } = await supabase
+          .from("habits")
+          .select("*")
+          .eq("user_id", currentUser.id)
+          .order("created_at", { ascending: false });
+
+        if (habitsError) {
+          habitList.innerHTML = `<p class="empty">Could not load habits. Run the SQL setup first.</p>`;
+          setFormStatus(habitsError.message);
+          return;
+        }
+
+        habits = habitsData || [];
+
+        const { data: entriesData, error: entriesError } = await supabase
+          .from("habit_entries")
+          .select("*")
+          .eq("user_id", currentUser.id);
+
+        if (entriesError) {
+          habitList.innerHTML = `<p class="empty">Could not load habit entries. Run the SQL setup first.</p>`;
+          setFormStatus(entriesError.message);
+          return;
+        }
+
+        entries = entriesData || [];
+      }
+
+      function renderHabits() {
+        weekTitle();
+
+        if (!habits.length) {
+          habitList.innerHTML = `<p class="empty">No habits yet. Add your first one to start tracking.</p>`;
+          return;
+        }
+
+        const entriesMap = getEntriesMap();
+        const days = weekDates(viewWeekStart);
+        const todayISO = workingTodayISO();
+
+        habitList.innerHTML = habits
+          .map((habit) => {
+            const completedCount = entries.filter((e) => e.habit_id === habit.id && e.completed).length;
+            const totalDays = Math.max(
+              1,
+              Math.floor((dateFromISO(habit.end_date) - dateFromISO(habit.start_date)) / (1000 * 60 * 60 * 24)) + 1,
+            );
+            const completionPct = Math.min(100, Math.round((completedCount / totalDays) * 100));
+
+            const dayButtons = days
+              .map((day) => {
+                const iso = formatDate(day);
+                const done = entriesMap.has(getEntryKey(habit.id, iso));
+                const outside = !inRange(iso, habit.start_date, habit.end_date) || iso > todayISO;
+                const cls = `day-btn${done ? " done" : ""}${outside ? " outside" : ""}`;
+                const mark = done ? "Done" : "Mark";
+                return `<button class="${cls}" data-habit-id="${habit.id}" data-day="${iso}" ${outside ? "disabled" : ""}>${day.toLocaleDateString([], {
+                  weekday: "short",
+                })}<br/>${day.getDate()}<br/>${mark}</button>`;
+              })
+              .join("");
+
+            return `
+              <article class="habit-card">
+                <div class="habit-head">
+                  <div>
+                    <h3 class="habit-name">${escapeHtml(habit.name)}</h3>
+                    <p class="muted">${escapeHtml(habit.description || "No description")}</p>
+                    <p class="muted">Timeframe: ${friendlyRange(habit.start_date, habit.end_date)} | Target: ${habit.target_per_week}/week</p>
+                  </div>
+                  <div class="meta-pill">${completionPct}% complete</div>
+                </div>
+                <div class="week-grid">${dayButtons}</div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function toggleHabitDay(habitId, dayISO) {
+        const existing = entries.find((e) => e.habit_id === habitId && e.entry_date === dayISO);
+
+        if (existing) {
+          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          entries = entries.filter((e) => e.id !== existing.id);
+        } else {
+          const { data, error } = await supabase
+            .from("habit_entries")
+            .insert({
+              habit_id: habitId,
+              user_id: currentUser.id,
+              entry_date: dayISO,
+              completed: true,
+            })
+            .select()
+            .single();
+
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          entries.push(data);
+        }
+
+        renderHabits();
+        renderAnalytics();
+      }
+
+      function getRangeDates(range) {
+        const today = dateFromISO(workingTodayISO());
+        if (range === "all") {
+          return { start: null, end: today };
+        }
+        const days = Number(range);
+        const start = addDays(today, -(days - 1));
+        return { start, end: today };
+      }
+
+      function countScheduledDaysInRange(habit, startDate, endDate) {
+        const habitStart = dateFromISO(habit.start_date);
+        const habitEnd = dateFromISO(habit.end_date);
+        const start = startDate ? new Date(Math.max(habitStart, startDate)) : habitStart;
+        const end = new Date(Math.min(habitEnd, endDate));
+        if (start > end) return 0;
+        return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      }
+
+      function currentStreak(habit) {
+        const byDate = new Set(entries.filter((e) => e.habit_id === habit.id && e.completed).map((e) => e.entry_date));
+        let streak = 0;
+        let cursor = dateFromISO(workingTodayISO());
+        const start = dateFromISO(habit.start_date);
+        while (cursor >= start) {
+          const iso = formatDate(cursor);
+          if (iso > habit.end_date) {
+            cursor = addDays(cursor, -1);
+            continue;
+          }
+          if (byDate.has(iso)) {
+            streak += 1;
+            cursor = addDays(cursor, -1);
+            continue;
+          }
+          break;
+        }
+        return streak;
+      }
+
+      function renderSummary(metrics) {
+        summaryGrid.innerHTML = `
+          <div class="metric">
+            <p class="metric-label">Total Habits</p>
+            <p class="metric-value">${metrics.totalHabits}</p>
+          </div>
+          <div class="metric">
+            <p class="metric-label">Completions</p>
+            <p class="metric-value">${metrics.totalCompletions}</p>
+          </div>
+          <div class="metric">
+            <p class="metric-label">Avg Completion</p>
+            <p class="metric-value">${metrics.avgCompletionPct}%</p>
+          </div>
+          <div class="metric">
+            <p class="metric-label">Best Streak</p>
+            <p class="metric-value">${metrics.bestStreak}d</p>
+          </div>
+        `;
+      }
+
+      function renderAnalytics() {
+        const range = analyticsRange.value;
+        const { start, end } = getRangeDates(range);
+        const startISO = start ? formatDate(start) : null;
+        const endISO = formatDate(end);
+
+        const habitLabels = habits.map((h) => h.name);
+        const rates = [];
+        const streaks = [];
+
+        let totalScheduled = 0;
+        let totalCompletions = 0;
+        let bestStreak = 0;
+
+        for (const habit of habits) {
+          const scheduled = countScheduledDaysInRange(habit, start, end);
+          const completed = entries.filter((e) => {
+            if (e.habit_id !== habit.id || !e.completed) return false;
+            if (startISO && e.entry_date < startISO) return false;
+            return e.entry_date <= endISO;
+          }).length;
+
+          totalScheduled += scheduled;
+          totalCompletions += completed;
+
+          const rate = scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
+          rates.push(rate);
+
+          const streak = currentStreak(habit);
+          streaks.push(streak);
+          if (streak > bestStreak) bestStreak = streak;
+        }
+
+        const dailyMap = new Map();
+        const daysForTrend = [];
+        const trendStart = start || addDays(end, -29);
+        let cursor = new Date(trendStart);
+        while (cursor <= end) {
+          const iso = formatDate(cursor);
+          daysForTrend.push(iso);
+          dailyMap.set(iso, 0);
+          cursor = addDays(cursor, 1);
+        }
+
+        for (const e of entries) {
+          if (!e.completed) continue;
+          if (!dailyMap.has(e.entry_date)) continue;
+          dailyMap.set(e.entry_date, (dailyMap.get(e.entry_date) || 0) + 1);
+        }
+
+        const trendValues = daysForTrend.map((d) => dailyMap.get(d) || 0);
+
+        const avgCompletionPct = totalScheduled > 0 ? Math.round((totalCompletions / totalScheduled) * 100) : 0;
+
+        renderSummary({
+          totalHabits: habits.length,
+          totalCompletions,
+          avgCompletionPct,
+          bestStreak,
+        });
+
+        if (habitRateChart) habitRateChart.destroy();
+        if (dailyTrendChart) dailyTrendChart.destroy();
+        if (streakChart) streakChart.destroy();
+
+        habitRateChart = new Chart(document.getElementById("habit-rate-chart"), {
+          type: "bar",
+          data: {
+            labels: habitLabels,
+            datasets: [
+              {
+                label: "Completion %",
+                data: rates,
+                backgroundColor: "rgba(194, 77, 44, 0.65)",
+                borderColor: "rgba(194, 77, 44, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, max: 100 } },
+          },
+        });
+
+        dailyTrendChart = new Chart(document.getElementById("daily-trend-chart"), {
+          type: "line",
+          data: {
+            labels: daysForTrend.map((d) => d.slice(5)),
+            datasets: [
+              {
+                label: "Completions",
+                data: trendValues,
+                tension: 0.3,
+                borderColor: "rgba(25, 122, 75, 1)",
+                backgroundColor: "rgba(25, 122, 75, 0.2)",
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+
+        streakChart = new Chart(document.getElementById("streak-chart"), {
+          type: "bar",
+          data: {
+            labels: habitLabels,
+            datasets: [
+              {
+                label: "Current streak (days)",
+                data: streaks,
+                backgroundColor: "rgba(31, 42, 55, 0.75)",
+              },
+            ],
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          },
+        });
+      }
+
+      async function handleCreateHabit(event) {
+        event.preventDefault();
+        setFormStatus("");
+
+        const name = document.getElementById("habit-name").value.trim();
+        const description = document.getElementById("habit-desc").value.trim();
+        const startDate = document.getElementById("habit-start").value;
+        const endDate = document.getElementById("habit-end").value;
+        const targetPerWeek = Number(document.getElementById("habit-target").value);
+
+        if (!name || !startDate || !endDate) {
+          setFormStatus("Please fill all required fields.");
+          return;
+        }
+
+        if (endDate < startDate) {
+          setFormStatus("End date must be on or after start date.");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("habits")
+          .insert({
+            user_id: currentUser.id,
+            name,
+            description,
+            start_date: startDate,
+            end_date: endDate,
+            target_per_week: targetPerWeek,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          setFormStatus(error.message);
+          return;
+        }
+
+        habits.unshift(data);
+        habitForm.reset();
+        document.getElementById("habit-target").value = "5";
+        setFormStatus("Habit created.");
+        renderHabits();
+        renderAnalytics();
+      }
+
+      function bindEvents() {
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+          await supabase.auth.signOut();
+          window.location.href = "/login.html";
+        });
+
+        document.getElementById("refresh-btn").addEventListener("click", async () => {
+          await loadHabitsAndEntries();
+          renderHabits();
+          renderAnalytics();
+        });
+
+        habitForm.addEventListener("submit", handleCreateHabit);
+
+        document.getElementById("prev-week").addEventListener("click", () => {
+          viewWeekStart = addDays(viewWeekStart, -7);
+          renderHabits();
+        });
+
+        document.getElementById("next-week").addEventListener("click", () => {
+          viewWeekStart = addDays(viewWeekStart, 7);
+          renderHabits();
+        });
+
+        habitList.addEventListener("click", async (event) => {
+          const btn = event.target.closest("button.day-btn");
+          if (!btn || btn.disabled) return;
+          const habitId = btn.dataset.habitId;
+          const dayISO = btn.dataset.day;
+          await toggleHabitDay(habitId, dayISO);
+        });
+
+        analyticsRange.addEventListener("change", renderAnalytics);
+
+        const tabHabits = document.getElementById("tab-habits");
+        const tabAnalytics = document.getElementById("tab-analytics");
+        const viewHabits = document.getElementById("view-habits");
+        const viewAnalytics = document.getElementById("view-analytics");
+
+        tabHabits.addEventListener("click", () => {
+          tabHabits.classList.add("active");
+          tabAnalytics.classList.remove("active");
+          viewHabits.style.display = "block";
+          viewAnalytics.style.display = "none";
+        });
+
+        tabAnalytics.addEventListener("click", () => {
+          tabAnalytics.classList.add("active");
+          tabHabits.classList.remove("active");
+          viewHabits.style.display = "none";
+          viewAnalytics.style.display = "block";
+          renderAnalytics();
+        });
+      }
+
+      async function init() {
+        document.getElementById("habit-start").value = workingTodayISO();
+        document.getElementById("habit-end").value = formatDate(addDays(new Date(), 30));
+
+        const user = await requireUser();
+        if (!user) return;
+
+        bindEvents();
+        await loadHabitsAndEntries();
+        renderHabits();
+        renderAnalytics();
+      }
+
+      init();
     </script>
   </body>
 </html>
