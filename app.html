@@ -9,12 +9,13 @@
       :root {
         --bg: #f3efe8;
         --panel: #fff9f1;
-        --panel-strong: #fff2e1;
+        --panel-strong: #fff1df;
         --text: #1f2a37;
         --muted: #667085;
         --accent: #c24d2c;
         --accent-soft: #f7ddcf;
         --ok: #197a4b;
+        --danger: #b42318;
         --border: #ead7be;
       }
 
@@ -29,39 +30,6 @@
         font-family: "Avenir Next", "Segoe UI", sans-serif;
       }
 
-      .shell {
-        width: min(1080px, 94vw);
-        margin: 1rem auto 1.4rem;
-      }
-
-      .topbar {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: center;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 0.8rem 0.95rem;
-      }
-
-      .brand {
-        margin: 0;
-        font-size: 1.1rem;
-        letter-spacing: 0.04em;
-      }
-
-      .who {
-        margin: 0.15rem 0 0;
-        color: var(--muted);
-        font-size: 0.85rem;
-      }
-
-      .top-actions {
-        display: flex;
-        gap: 0.6rem;
-      }
-
       button,
       select,
       input,
@@ -69,12 +37,45 @@
         font: inherit;
       }
 
+      .shell {
+        width: min(1200px, 94vw);
+        margin: 1rem auto 1.4rem;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.76rem 0.9rem;
+      }
+
+      .brand {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: 0.04em;
+      }
+
+      .who {
+        margin: 0.15rem 0 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .top-actions {
+        display: flex;
+        gap: 0.45rem;
+      }
+
       .btn {
         border: 0;
-        border-radius: 9px;
-        padding: 0.48rem 0.75rem;
+        border-radius: 8px;
+        padding: 0.44rem 0.7rem;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.86rem;
       }
 
       .btn-primary {
@@ -83,146 +84,166 @@
       }
 
       .btn-ghost {
-        border: 1px solid var(--border);
         background: #fff;
         color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .btn-danger {
+        background: #fff;
+        color: var(--danger);
+        border: 1px solid #f4c7c2;
+      }
+
+      .btn-small {
+        padding: 0.3rem 0.45rem;
+        font-size: 0.78rem;
+        border-radius: 7px;
       }
 
       .tabs {
-        margin-top: 0.65rem;
+        margin-top: 0.62rem;
         display: flex;
-        gap: 0.45rem;
+        gap: 0.42rem;
       }
 
       .tab {
         border: 1px solid var(--border);
         border-radius: 999px;
         background: #fff;
-        padding: 0.36rem 0.8rem;
-        cursor: pointer;
         color: var(--muted);
-        font-size: 0.86rem;
+        padding: 0.34rem 0.8rem;
+        font-size: 0.82rem;
+        cursor: pointer;
       }
 
       .tab.active {
         background: var(--accent-soft);
         color: var(--text);
-        border-color: #e5bf9f;
+        border-color: #e2bb99;
       }
 
       .panel {
-        margin-top: 0.65rem;
+        margin-top: 0.62rem;
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 16px;
+        border-radius: 14px;
         padding: 0.7rem;
       }
 
-      .grid {
+      .layout {
         display: grid;
-        grid-template-columns: 300px 1fr;
+        grid-template-columns: 320px 1fr;
         gap: 0.7rem;
       }
 
-      .form-card,
-      .list-card,
-      .chart-card,
-      .summary-card {
+      .card {
         background: #fff;
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 0.75rem;
+        padding: 0.72rem;
       }
 
       .section-title {
-        margin: 0 0 0.55rem;
-        font-size: 0.95rem;
+        margin: 0 0 0.56rem;
+        font-size: 0.94rem;
       }
 
       label {
         display: block;
-        margin: 0.45rem 0 0.26rem;
-        font-size: 0.82rem;
+        margin: 0.45rem 0 0.24rem;
+        font-size: 0.79rem;
         color: var(--muted);
       }
 
       input,
-      textarea,
-      select {
+      select,
+      textarea {
         width: 100%;
-        border: 1px solid #d9c7ae;
-        border-radius: 9px;
-        padding: 0.5rem 0.58rem;
+        border: 1px solid #d7c5ad;
+        border-radius: 8px;
+        padding: 0.45rem 0.55rem;
+        font-size: 0.88rem;
         background: #fff;
-        font-size: 0.9rem;
       }
 
       textarea {
+        min-height: 56px;
         resize: vertical;
-        min-height: 54px;
       }
 
-      .row {
+      .row-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-      }
-
-      .hint {
-        margin: 0.35rem 0 0;
-        color: var(--muted);
-        font-size: 0.76rem;
+        gap: 0.45rem;
       }
 
       .status {
-        min-height: 1.15rem;
+        min-height: 1.1rem;
         margin-top: 0.35rem;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         color: var(--muted);
+      }
+
+      .helper {
+        margin: 0.3rem 0 0;
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      .week-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+        margin-bottom: 0.44rem;
+      }
+
+      .week-label {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1.25fr 1fr 1fr;
+        gap: 0.45rem;
+        margin-bottom: 0.5rem;
+      }
+
+      #habit-list {
+        max-height: 69vh;
+        overflow: auto;
+        padding-right: 0.1rem;
       }
 
       .habit-card {
         border: 1px solid var(--border);
+        border-radius: 11px;
         background: #fff;
-        border-radius: 12px;
-        padding: 0.62rem;
+        padding: 0.58rem;
       }
 
       .habit-card + .habit-card {
-        margin-top: 0.5rem;
+        margin-top: 0.48rem;
       }
 
-      .habit-head {
+      .habit-top {
         display: flex;
         justify-content: space-between;
-        gap: 0.55rem;
         align-items: flex-start;
+        gap: 0.45rem;
       }
 
       .habit-name {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 0.93rem;
         line-height: 1.2;
       }
 
-      .muted {
-        color: var(--muted);
-        margin: 0.18rem 0 0;
-        font-size: 0.78rem;
-      }
-
-      .meta-pill {
-        background: var(--panel-strong);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0.14rem 0.45rem;
-        font-size: 0.72rem;
-        white-space: nowrap;
-      }
-
       .habit-desc {
-        margin: 0.25rem 0 0;
-        font-size: 0.78rem;
+        margin: 0.22rem 0 0;
+        font-size: 0.77rem;
         color: var(--muted);
         display: -webkit-box;
         -webkit-line-clamp: 1;
@@ -230,20 +251,42 @@
         overflow: hidden;
       }
 
-      .habit-meta {
-        margin-top: 0.3rem;
+      .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: 0.28rem;
+        margin-top: 0.28rem;
+      }
+
+      .pill {
+        border: 1px solid var(--border);
+        background: var(--panel-strong);
+        border-radius: 999px;
+        padding: 0.13rem 0.42rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
+      }
+
+      .pill.private {
+        border-color: #f3d0cb;
+        background: #fde9e7;
+        color: #9f1f17;
+      }
+
+      .habit-actions {
+        display: flex;
+        gap: 0.24rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .progress-track {
-        margin-top: 0.4rem;
+        margin-top: 0.37rem;
         width: 100%;
         height: 5px;
         border-radius: 999px;
-        background: #f2e6d7;
         overflow: hidden;
+        background: #f0e3d3;
       }
 
       .progress-bar {
@@ -253,101 +296,186 @@
       }
 
       .week-grid {
-        margin-top: 0.42rem;
+        margin-top: 0.37rem;
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 0.28rem;
       }
 
       .day-btn {
+        position: relative;
         border: 1px solid var(--border);
         background: #fff;
         border-radius: 7px;
-        padding: 0.26rem 0.14rem;
-        cursor: pointer;
-        font-size: 0.68rem;
+        min-height: 41px;
+        padding: 0.22rem 0.12rem;
+        font-size: 0.66rem;
         line-height: 1.1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 42px;
+        cursor: pointer;
+      }
+
+      .day-btn strong {
+        font-size: 0.74rem;
       }
 
       .day-btn.done {
         background: #d9f2e5;
-        border-color: #a6d8bf;
+        border-color: #a7d9bf;
         color: #0c5a34;
       }
 
+      .day-btn.noted::after {
+        content: "";
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        right: 4px;
+        top: 4px;
+      }
+
       .day-btn.today {
-        border-color: #d3ad8c;
+        border-color: #d2a987;
       }
 
       .day-btn.outside {
-        opacity: 0.4;
+        opacity: 0.38;
         cursor: not-allowed;
       }
 
-      .week-nav {
-        margin: 0.4rem 0 0.38rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.4rem;
-      }
-
-      .week-label {
-        font-size: 0.82rem;
-        color: var(--muted);
-      }
-
-      #habit-list {
-        max-height: 67vh;
-        overflow: auto;
-        padding-right: 0.1rem;
-      }
-
-      .empty {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.88rem;
+      .note-row {
+        margin-top: 0.42rem;
+        display: grid;
+        grid-template-columns: 150px 1fr auto;
+        gap: 0.34rem;
       }
 
       .analytics-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.65rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.62rem;
       }
 
       .summary-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.45rem;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.4rem;
       }
 
       .metric {
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 9px;
         background: #fff;
-        padding: 0.5rem;
+        padding: 0.45rem;
       }
 
       .metric-label {
         margin: 0;
-        font-size: 0.69rem;
+        font-size: 0.66rem;
         color: var(--muted);
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
 
       .metric-value {
-        margin: 0.2rem 0 0;
-        font-size: 1.1rem;
+        margin: 0.15rem 0 0;
+        font-size: 1rem;
       }
 
-      @media (max-width: 980px) {
-        .grid {
+      .heatmap-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.38rem;
+      }
+
+      .heatmap {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.2rem;
+      }
+
+      .heatmap-day {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        text-align: center;
+        font-size: 0.66rem;
+        padding: 0.24rem 0.08rem;
+        color: #334155;
+        background: #fff;
+      }
+
+      .heatmap-day.empty {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .intensity-0 {
+        background: #fff;
+      }
+
+      .intensity-1 {
+        background: #f4eadb;
+      }
+
+      .intensity-2 {
+        background: #efd6bf;
+      }
+
+      .intensity-3 {
+        background: #e8bd9b;
+      }
+
+      .intensity-4 {
+        background: #dc9568;
+        color: #fff;
+      }
+
+      .social-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 0.7rem;
+      }
+
+      .list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .list-item {
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: #fff;
+        padding: 0.45rem;
+      }
+
+      .list-item + .list-item {
+        margin-top: 0.35rem;
+      }
+
+      .friend-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.4rem;
+        align-items: center;
+      }
+
+      .empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      @media (max-width: 1080px) {
+        .layout,
+        .social-layout {
           grid-template-columns: 1fr;
         }
 
@@ -355,12 +483,20 @@
           max-height: none;
         }
 
-        .analytics-grid {
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .note-row {
           grid-template-columns: 1fr;
         }
 
         .summary-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .analytics-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -381,50 +517,95 @@
       <div class="tabs">
         <button id="tab-habits" class="tab active">Habits</button>
         <button id="tab-analytics" class="tab">Analytics</button>
+        <button id="tab-social" class="tab">Social</button>
       </div>
 
       <section id="view-habits" class="panel">
-        <div class="grid">
-          <aside class="form-card">
-            <h2 class="section-title">Add Habit</h2>
+        <div class="layout">
+          <aside class="card">
+            <h2 id="habit-form-title" class="section-title">Add Habit</h2>
             <form id="habit-form">
-              <label for="habit-name">Habit name</label>
+              <label for="habit-name">Name</label>
               <input id="habit-name" maxlength="80" required />
 
               <label for="habit-desc">Description</label>
               <textarea id="habit-desc" maxlength="240" placeholder="Optional"></textarea>
 
-              <label for="habit-target">Target days per week</label>
-              <select id="habit-target">
-                <option value="7">7 (daily)</option>
-                <option value="6">6</option>
-                <option value="5" selected>5</option>
-                <option value="4">4</option>
-                <option value="3">3</option>
-                <option value="2">2</option>
-                <option value="1">1</option>
-              </select>
+              <div class="row-2">
+                <div>
+                  <label for="habit-category">Category</label>
+                  <input id="habit-category" maxlength="40" placeholder="Health, Work, etc" />
+                </div>
+                <div>
+                  <label for="habit-target">Target / week</label>
+                  <select id="habit-target">
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5" selected>5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+              </div>
 
-              <button class="btn btn-primary" style="margin-top: 0.8rem; width: 100%" type="submit">Create habit</button>
-              <p class="hint">Track completion by clicking day cells for each habit.</p>
+              <label for="habit-tags">Tags (comma separated)</label>
+              <input id="habit-tags" maxlength="120" placeholder="morning, deep-work" />
+
+              <div class="row-2">
+                <div>
+                  <label for="habit-visibility">Visibility</label>
+                  <select id="habit-visibility">
+                    <option value="friends">Visible to friends</option>
+                    <option value="private">Hidden from friends</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="habit-pin">Pin priority</label>
+                  <select id="habit-pin">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.35rem; margin-top: 0.6rem">
+                <button id="habit-submit-btn" class="btn btn-primary" type="submit" style="flex: 1">Create habit</button>
+                <button id="habit-cancel-btn" class="btn btn-ghost" type="button" style="display: none">Cancel</button>
+              </div>
+              <p class="helper">Tip: Click a day to toggle completion. Save notes per day below each habit.</p>
               <div id="form-status" class="status"></div>
             </form>
           </aside>
 
-          <main class="list-card">
-            <h2 class="section-title">Your Habits <span id="habit-count" class="meta-pill">0</span></h2>
+          <main class="card">
             <div class="week-nav">
               <button id="prev-week" class="btn btn-ghost">Prev week</button>
               <div id="week-label" class="week-label"></div>
+              <span id="habit-count" class="pill">0 habits</span>
             </div>
+
+            <div class="toolbar">
+              <input id="filter-query" placeholder="Search name/description/tags" />
+              <select id="filter-category">
+                <option value="all">All categories</option>
+              </select>
+              <select id="filter-visibility">
+                <option value="all">All visibility</option>
+                <option value="friends">Friends visible</option>
+                <option value="private">Private only</option>
+              </select>
+            </div>
+
             <div id="habit-list"></div>
           </main>
         </div>
       </section>
 
       <section id="view-analytics" class="panel" style="display: none">
-        <div class="summary-card" style="margin-bottom: 0.8rem">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.7rem">
+        <div class="card" style="margin-bottom: 0.62rem">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem">
             <h2 class="section-title" style="margin: 0">Insights</h2>
             <select id="analytics-range" style="max-width: 170px">
               <option value="7">Last 7 days</option>
@@ -437,18 +618,60 @@
         </div>
 
         <div class="analytics-grid">
-          <div class="chart-card">
+          <div class="card">
             <h3 class="section-title">Completion Rate by Habit</h3>
-            <canvas id="habit-rate-chart" height="160"></canvas>
+            <canvas id="habit-rate-chart" height="150"></canvas>
           </div>
-          <div class="chart-card">
+          <div class="card">
             <h3 class="section-title">Daily Completion Trend</h3>
-            <canvas id="daily-trend-chart" height="160"></canvas>
+            <canvas id="daily-trend-chart" height="150"></canvas>
           </div>
-          <div class="chart-card" style="grid-column: 1 / -1">
+          <div class="card">
+            <h3 class="section-title">Rolling 7 vs 30 day Trend</h3>
+            <canvas id="rolling-chart" height="140"></canvas>
+          </div>
+          <div class="card">
             <h3 class="section-title">Current Streaks</h3>
-            <canvas id="streak-chart" height="120"></canvas>
+            <canvas id="streak-chart" height="140"></canvas>
           </div>
+          <div class="card" style="grid-column: 1 / -1">
+            <div class="heatmap-head">
+              <h3 class="section-title" style="margin: 0">Monthly Heatmap</h3>
+              <input id="heatmap-month" type="month" style="max-width: 170px" />
+            </div>
+            <div class="heatmap" id="heatmap-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-social" class="panel" style="display: none">
+        <div class="social-layout">
+          <aside class="card">
+            <h2 class="section-title">Profile</h2>
+            <label for="profile-display-name">Display name</label>
+            <input id="profile-display-name" maxlength="60" placeholder="Your name" />
+            <label for="profile-handle">Handle</label>
+            <input id="profile-handle" maxlength="30" placeholder="your_handle" />
+            <button id="save-profile-btn" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%">Save profile</button>
+            <div id="profile-status" class="status"></div>
+
+            <h2 class="section-title" style="margin-top: 0.8rem">Add Friend</h2>
+            <label for="friend-handle">Friend handle</label>
+            <input id="friend-handle" placeholder="friend_handle" />
+            <button id="send-request-btn" class="btn btn-ghost" style="margin-top: 0.45rem; width: 100%">Send request</button>
+            <div id="friend-status" class="status"></div>
+
+            <h2 class="section-title" style="margin-top: 0.8rem">Incoming Requests</h2>
+            <ul id="request-list" class="list"></ul>
+          </aside>
+
+          <main class="card">
+            <h2 class="section-title">Friends</h2>
+            <ul id="friends-list" class="list" style="margin-bottom: 0.7rem"></ul>
+
+            <h2 class="section-title">Friend Habits</h2>
+            <div id="friend-habits" class="empty">Select a friend to view shared habits.</div>
+          </main>
         </div>
       </section>
     </div>
@@ -467,19 +690,48 @@
       const habitList = document.getElementById("habit-list");
       const habitCount = document.getElementById("habit-count");
       const weekLabel = document.getElementById("week-label");
-      const analyticsRange = document.getElementById("analytics-range");
       const summaryGrid = document.getElementById("summary-grid");
+      const analyticsRange = document.getElementById("analytics-range");
+      const heatmapMonth = document.getElementById("heatmap-month");
+      const heatmapGrid = document.getElementById("heatmap-grid");
+
+      const filterQuery = document.getElementById("filter-query");
+      const filterCategory = document.getElementById("filter-category");
+      const filterVisibility = document.getElementById("filter-visibility");
+
+      const habitFormTitle = document.getElementById("habit-form-title");
+      const habitSubmitBtn = document.getElementById("habit-submit-btn");
+      const habitCancelBtn = document.getElementById("habit-cancel-btn");
+
+      const profileDisplayNameInput = document.getElementById("profile-display-name");
+      const profileHandleInput = document.getElementById("profile-handle");
+      const profileStatus = document.getElementById("profile-status");
+      const friendStatus = document.getElementById("friend-status");
+      const requestList = document.getElementById("request-list");
+      const friendsList = document.getElementById("friends-list");
+      const friendHabits = document.getElementById("friend-habits");
 
       let currentUser = null;
+      let profile = null;
       let habits = [];
       let entries = [];
       let viewWeekStart = startOfWeek(new Date());
+      let editingHabitId = null;
+      let selectedNoteDayByHabit = new Map();
+
+      let requests = [];
+      let friends = [];
+      let selectedFriendId = null;
+      let selectedFriendHabits = [];
+      let selectedFriendEntries = [];
+
       let habitRateChart = null;
       let dailyTrendChart = null;
       let streakChart = null;
-      let habitsChannel = null;
-      let entriesChannel = null;
-      let realtimeSyncTimer = null;
+      let rollingChart = null;
+
+      let channels = [];
+      let syncTimer = null;
       let isSyncing = false;
       let syncQueued = false;
 
@@ -509,43 +761,39 @@
         return d;
       }
 
-      function inRange(dateISO, startISO, endISO) {
-        return dateISO >= startISO && dateISO <= endISO;
-      }
-
-      function habitTrackingStartDate(habit) {
-        if (habit.created_at) {
-          const d = new Date(habit.created_at);
-          d.setHours(0, 0, 0, 0);
-          return d;
-        }
-        return dateFromISO(workingTodayISO());
-      }
-
-      function setFormStatus(msg) {
-        formStatus.textContent = msg;
-      }
-
-      function getEntryKey(habitId, dayISO) {
-        return `${habitId}::${dayISO}`;
-      }
-
-      function getEntriesMap() {
-        const map = new Map();
-        for (const e of entries) {
-          if (e.completed) {
-            map.set(getEntryKey(e.habit_id, e.entry_date), e);
-          }
-        }
-        return map;
-      }
-
       function weekDates(start) {
         const days = [];
-        for (let i = 0; i < 7; i += 1) {
-          days.push(addDays(start, i));
-        }
+        for (let i = 0; i < 7; i += 1) days.push(addDays(start, i));
         return days;
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function tagsFromText(value) {
+        return [...new Set(value.split(",").map((t) => t.trim()).filter(Boolean))].slice(0, 8);
+      }
+
+      function tagsToText(tags) {
+        return Array.isArray(tags) ? tags.join(", ") : "";
+      }
+
+      function setStatus(el, msg) {
+        el.textContent = msg;
+      }
+
+      function todayISO() {
+        return formatDate(new Date());
+      }
+
+      function getEntry(habitId, entryDate) {
+        return entries.find((e) => e.habit_id === habitId && e.entry_date === entryDate) || null;
       }
 
       function friendlyRange(startISO, endISO) {
@@ -554,8 +802,58 @@
         return `${s.toLocaleDateString()} - ${e.toLocaleDateString()}`;
       }
 
-      function workingTodayISO() {
-        return formatDate(new Date());
+      function defaultHandleFromEmail(email) {
+        return (email || "user").split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";
+      }
+
+      function scoreToIntensity(score) {
+        if (score <= 0) return 0;
+        if (score === 1) return 1;
+        if (score <= 3) return 2;
+        if (score <= 5) return 3;
+        return 4;
+      }
+
+      function sortHabits(input) {
+        return [...input].sort((a, b) => {
+          if ((a.is_pinned ? 1 : 0) !== (b.is_pinned ? 1 : 0)) {
+            return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
+          }
+          if ((a.sort_order ?? 0) !== (b.sort_order ?? 0)) {
+            return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+          }
+          return new Date(b.created_at) - new Date(a.created_at);
+        });
+      }
+
+      function filteredHabits() {
+        const query = filterQuery.value.trim().toLowerCase();
+        const category = filterCategory.value;
+        const visibility = filterVisibility.value;
+
+        return sortHabits(habits).filter((h) => {
+          if (category !== "all" && (h.category || "").trim() !== category) return false;
+          if (visibility !== "all" && h.visibility !== visibility) return false;
+          if (!query) return true;
+
+          const hay = [h.name, h.description || "", h.category || "", ...(h.tags || [])].join(" ").toLowerCase();
+          return hay.includes(query);
+        });
+      }
+
+      function refreshCategoryFilterOptions() {
+        const current = filterCategory.value;
+        const categories = [...new Set(habits.map((h) => (h.category || "").trim()).filter(Boolean))].sort((a, b) =>
+          a.localeCompare(b),
+        );
+
+        filterCategory.innerHTML = `<option value="all">All categories</option>${categories
+          .map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+          .join("")}`;
+
+        if (categories.includes(current)) {
+          filterCategory.value = current;
+        }
       }
 
       function weekTitle() {
@@ -574,16 +872,46 @@
         return data.user;
       }
 
+      async function ensureProfile() {
+        const { data, error } = await supabase.from("profiles").select("*").eq("user_id", currentUser.id).maybeSingle();
+        if (error) {
+          setStatus(profileStatus, error.message);
+          return;
+        }
+
+        if (!data) {
+          const fallbackHandle = defaultHandleFromEmail(currentUser.email);
+          const { data: inserted, error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: currentUser.id,
+              display_name: currentUser.email,
+              handle: fallbackHandle,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            setStatus(profileStatus, insertError.message);
+            return;
+          }
+          profile = inserted;
+        } else {
+          profile = data;
+        }
+
+        profileDisplayNameInput.value = profile.display_name || "";
+        profileHandleInput.value = profile.handle || "";
+      }
+
       async function loadHabitsAndEntries() {
         const { data: habitsData, error: habitsError } = await supabase
           .from("habits")
           .select("*")
-          .eq("user_id", currentUser.id)
-          .order("created_at", { ascending: false });
+          .eq("user_id", currentUser.id);
 
         if (habitsError) {
-          habitList.innerHTML = `<p class="empty">Could not load habits. Run the SQL setup first.</p>`;
-          setFormStatus(habitsError.message);
+          habitList.innerHTML = `<p class="empty">Could not load habits: ${escapeHtml(habitsError.message)}</p>`;
           return;
         }
 
@@ -595,12 +923,85 @@
           .eq("user_id", currentUser.id);
 
         if (entriesError) {
-          habitList.innerHTML = `<p class="empty">Could not load habit entries. Run the SQL setup first.</p>`;
-          setFormStatus(entriesError.message);
+          habitList.innerHTML = `<p class="empty">Could not load entries: ${escapeHtml(entriesError.message)}</p>`;
           return;
         }
 
         entries = entriesData || [];
+      }
+
+      async function loadSocialData() {
+        const { data: reqRows, error: reqError } = await supabase
+          .from("friendships")
+          .select("id, requester_id, addressee_id, status, created_at")
+          .eq("addressee_id", currentUser.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false });
+
+        if (reqError) {
+          requests = [];
+        } else {
+          const requesterIds = [...new Set((reqRows || []).map((r) => r.requester_id))];
+          let requesterProfiles = [];
+          if (requesterIds.length) {
+            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", requesterIds);
+            requesterProfiles = p || [];
+          }
+          requests = (reqRows || []).map((r) => ({
+            ...r,
+            requester_profile: requesterProfiles.find((p) => p.user_id === r.requester_id) || null,
+          }));
+        }
+
+        const { data: friendRows, error: friendError } = await supabase
+          .from("friendships")
+          .select("id, requester_id, addressee_id, status, created_at")
+          .eq("status", "accepted")
+          .or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`)
+          .order("created_at", { ascending: false });
+
+        if (friendError) {
+          friends = [];
+        } else {
+          const friendIds = [...new Set((friendRows || []).map((r) => (r.requester_id === currentUser.id ? r.addressee_id : r.requester_id)))];
+          let friendProfiles = [];
+          if (friendIds.length) {
+            const { data: p } = await supabase.from("profiles").select("user_id, display_name, handle").in("user_id", friendIds);
+            friendProfiles = p || [];
+          }
+          friends = friendIds
+            .map((id) => friendProfiles.find((p) => p.user_id === id))
+            .filter(Boolean)
+            .sort((a, b) => (a.display_name || a.handle || "").localeCompare(b.display_name || b.handle || ""));
+        }
+      }
+
+      async function loadFriendHabits(friendId) {
+        selectedFriendId = friendId;
+
+        const { data: h, error: he } = await supabase.from("habits").select("*").eq("user_id", friendId);
+        if (he) {
+          friendHabits.innerHTML = `<p class="empty">${escapeHtml(he.message)}</p>`;
+          return;
+        }
+
+        const { data: e, error: ee } = await supabase.from("habit_entries").select("*").eq("user_id", friendId);
+        if (ee) {
+          friendHabits.innerHTML = `<p class="empty">${escapeHtml(ee.message)}</p>`;
+          return;
+        }
+
+        selectedFriendHabits = sortHabits(h || []);
+        selectedFriendEntries = e || [];
+        renderFriendHabits();
+      }
+
+      function scheduleSync() {
+        if (syncTimer) return;
+        syncTimer = setTimeout(async () => {
+          syncTimer = null;
+          await syncFromServer();
+        }, 250);
       }
 
       async function syncFromServer() {
@@ -611,9 +1012,19 @@
 
         isSyncing = true;
         try {
+          await ensureProfile();
           await loadHabitsAndEntries();
+          await loadSocialData();
+
+          refreshCategoryFilterOptions();
           renderHabits();
           renderAnalytics();
+          renderRequests();
+          renderFriends();
+
+          if (selectedFriendId) {
+            await loadFriendHabits(selectedFriendId);
+          }
         } finally {
           isSyncing = false;
           if (syncQueued) {
@@ -623,289 +1034,281 @@
         }
       }
 
-      function scheduleRealtimeSync() {
-        if (realtimeSyncTimer) return;
-        realtimeSyncTimer = setTimeout(async () => {
-          realtimeSyncTimer = null;
-          await syncFromServer();
-        }, 250);
-      }
-
       function teardownRealtime() {
-        if (habitsChannel) {
-          supabase.removeChannel(habitsChannel);
-          habitsChannel = null;
-        }
-        if (entriesChannel) {
-          supabase.removeChannel(entriesChannel);
-          entriesChannel = null;
-        }
-        if (realtimeSyncTimer) {
-          clearTimeout(realtimeSyncTimer);
-          realtimeSyncTimer = null;
+        channels.forEach((c) => supabase.removeChannel(c));
+        channels = [];
+        if (syncTimer) {
+          clearTimeout(syncTimer);
+          syncTimer = null;
         }
       }
 
       function setupRealtime() {
         teardownRealtime();
 
-        habitsChannel = supabase
-          .channel(`habits-${currentUser.id}`)
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "habits", filter: `user_id=eq.${currentUser.id}` },
-            scheduleRealtimeSync,
-          )
-          .subscribe();
-
-        entriesChannel = supabase
-          .channel(`habit-entries-${currentUser.id}`)
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "habit_entries", filter: `user_id=eq.${currentUser.id}` },
-            scheduleRealtimeSync,
-          )
-          .subscribe();
+        const tables = ["habits", "habit_entries", "profiles", "friendships"];
+        for (const table of tables) {
+          const channel = supabase
+            .channel(`rt-${table}-${currentUser.id}`)
+            .on("postgres_changes", { event: "*", schema: "public", table }, scheduleSync)
+            .subscribe();
+          channels.push(channel);
+        }
       }
 
       function renderHabits() {
         weekTitle();
-        habitCount.textContent = habits.length;
+        const visibleHabits = filteredHabits();
+        habitCount.textContent = `${visibleHabits.length} habits`;
 
-        if (!habits.length) {
-          habitList.innerHTML = `<p class="empty">No habits yet. Add your first one to start tracking.</p>`;
+        if (!visibleHabits.length) {
+          habitList.innerHTML = `<p class="empty">No habits match your filters.</p>`;
           return;
         }
 
-        const entriesMap = getEntriesMap();
         const days = weekDates(viewWeekStart);
-        const todayISO = workingTodayISO();
+        const today = todayISO();
 
-        habitList.innerHTML = habits
+        habitList.innerHTML = visibleHabits
           .map((habit) => {
-            const completedCount = entries.filter((e) => e.habit_id === habit.id && e.completed).length;
-            const totalDays = Math.max(
-              1,
-              Math.floor((dateFromISO(workingTodayISO()) - habitTrackingStartDate(habit)) / (1000 * 60 * 60 * 24)) + 1,
-            );
-            const completionPct = Math.min(100, Math.round((completedCount / totalDays) * 100));
-            const activeThisWeek = days.filter((day) => {
-              const iso = formatDate(day);
-              return iso <= todayISO;
-            }).length;
-            const doneThisWeek = days.filter((day) => {
-              const iso = formatDate(day);
-              return entriesMap.has(getEntryKey(habit.id, iso));
+            const completedAll = entries.filter((e) => e.habit_id === habit.id && e.completed).length;
+            const start = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
+            const totalDays = Math.max(1, Math.floor((dateFromISO(today) - start) / 86400000) + 1);
+            const pct = Math.min(100, Math.round((completedAll / totalDays) * 100));
+
+            const weekActive = days.filter((d) => formatDate(d) <= today).length;
+            const weekDone = days.filter((d) => {
+              const e = getEntry(habit.id, formatDate(d));
+              return !!(e && e.completed);
             }).length;
 
-            const dayButtons = days
-              .map((day) => {
-                const iso = formatDate(day);
-                const done = entriesMap.has(getEntryKey(habit.id, iso));
-                const outside = iso > todayISO;
-                const isToday = iso === todayISO;
-                const cls = `day-btn${done ? " done" : ""}${outside ? " outside" : ""}${isToday ? " today" : ""}`;
-                return `<button class="${cls}" data-habit-id="${habit.id}" data-day="${iso}" ${outside ? "disabled" : ""}><span>${day.toLocaleDateString([], {
+            const dayBtns = days
+              .map((d) => {
+                const iso = formatDate(d);
+                const e = getEntry(habit.id, iso);
+                const done = !!(e && e.completed);
+                const hasNote = !!(e && e.note);
+                const outside = iso > today;
+                const isToday = iso === today;
+                const cls = `day-btn${done ? " done" : ""}${hasNote ? " noted" : ""}${outside ? " outside" : ""}${isToday ? " today" : ""}`;
+                return `<button class="${cls}" data-action="toggle-day" data-habit-id="${habit.id}" data-day="${iso}" ${outside ? "disabled" : ""}><span>${d.toLocaleDateString([], {
                   weekday: "narrow",
-                })}</span><strong>${day.getDate()}</strong></button>`;
+                })}</span><strong>${d.getDate()}</strong></button>`;
+              })
+              .join("");
+
+            const noteDay = selectedNoteDayByHabit.get(habit.id) || days.find((d) => formatDate(d) <= today)?.toISOString().slice(0, 10) || today;
+            const noteEntry = getEntry(habit.id, noteDay);
+            const noteText = noteEntry?.note || "";
+
+            const daySelectOptions = days
+              .filter((d) => formatDate(d) <= today)
+              .map((d) => {
+                const iso = formatDate(d);
+                const label = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+                return `<option value="${iso}" ${iso === noteDay ? "selected" : ""}>${label}</option>`;
               })
               .join("");
 
             return `
               <article class="habit-card">
-                <div class="habit-head">
+                <div class="habit-top">
                   <div>
                     <h3 class="habit-name">${escapeHtml(habit.name)}</h3>
                     ${habit.description ? `<p class="habit-desc">${escapeHtml(habit.description)}</p>` : ""}
-                    <div class="habit-meta">
-                      <span class="meta-pill">Target ${habit.target_per_week}/wk</span>
-                      <span class="meta-pill">This week ${doneThisWeek}/${activeThisWeek || 0}</span>
+                    <div class="pill-row">
+                      ${habit.category ? `<span class="pill">${escapeHtml(habit.category)}</span>` : ""}
+                      ${(habit.tags || []).map((t) => `<span class="pill">#${escapeHtml(t)}</span>`).join("")}
+                      <span class="pill ${habit.visibility === "private" ? "private" : ""}">${habit.visibility === "private" ? "Private" : "Friends"}</span>
+                      <span class="pill">Target ${habit.target_per_week}/wk</span>
+                      <span class="pill">Week ${weekDone}/${weekActive}</span>
                     </div>
-                    <div class="progress-track" aria-hidden="true">
-                      <div class="progress-bar" style="width: ${completionPct}%"></div>
-                    </div>
+                    <div class="progress-track"><div class="progress-bar" style="width: ${pct}%"></div></div>
                   </div>
-                  <div class="meta-pill">${completionPct}% complete</div>
+                  <div class="habit-actions">
+                    <button class="btn btn-ghost btn-small" data-action="pin" data-habit-id="${habit.id}">${habit.is_pinned ? "Unpin" : "Pin"}</button>
+                    <button class="btn btn-ghost btn-small" data-action="move-up" data-habit-id="${habit.id}">Up</button>
+                    <button class="btn btn-ghost btn-small" data-action="move-down" data-habit-id="${habit.id}">Down</button>
+                    <button class="btn btn-ghost btn-small" data-action="edit" data-habit-id="${habit.id}">Edit</button>
+                    <button class="btn btn-danger btn-small" data-action="delete" data-habit-id="${habit.id}">Delete</button>
+                  </div>
                 </div>
-                <div class="week-grid">${dayButtons}</div>
+
+                <div class="week-grid">${dayBtns}</div>
+
+                <div class="note-row">
+                  <select data-action="note-day" data-habit-id="${habit.id}">${daySelectOptions}</select>
+                  <input data-action="note-input" data-habit-id="${habit.id}" value="${escapeHtml(noteText)}" placeholder="Note for selected day" maxlength="200" />
+                  <button class="btn btn-ghost btn-small" data-action="save-note" data-habit-id="${habit.id}">Save note</button>
+                </div>
               </article>
             `;
           })
           .join("");
       }
 
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/\"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-
-      async function toggleHabitDay(habitId, dayISO) {
-        const existing = entries.find((e) => e.habit_id === habitId && e.entry_date === dayISO);
-
-        if (existing) {
-          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
-          if (error) {
-            alert(error.message);
-            return;
-          }
-          entries = entries.filter((e) => e.id !== existing.id);
-        } else {
-          const { data, error } = await supabase
-            .from("habit_entries")
-            .insert({
-              habit_id: habitId,
-              user_id: currentUser.id,
-              entry_date: dayISO,
-              completed: true,
-            })
-            .select()
-            .single();
-
-          if (error) {
-            alert(error.message);
-            return;
-          }
-          entries.push(data);
-        }
-
-        renderHabits();
-        renderAnalytics();
+      function renderSummary(metrics) {
+        summaryGrid.innerHTML = `
+          <div class="metric"><p class="metric-label">Habits</p><p class="metric-value">${metrics.totalHabits}</p></div>
+          <div class="metric"><p class="metric-label">Completions</p><p class="metric-value">${metrics.totalCompletions}</p></div>
+          <div class="metric"><p class="metric-label">Avg Completion</p><p class="metric-value">${metrics.avgCompletionPct}%</p></div>
+          <div class="metric"><p class="metric-label">Consistency</p><p class="metric-value">${metrics.consistencyScore}%</p></div>
+          <div class="metric"><p class="metric-label">Best Day</p><p class="metric-value">${metrics.bestDay}</p></div>
+          <div class="metric"><p class="metric-label">Worst Day</p><p class="metric-value">${metrics.worstDay}</p></div>
+        `;
       }
 
       function getRangeDates(range) {
-        const today = dateFromISO(workingTodayISO());
-        if (range === "all") {
-          return { start: null, end: today };
-        }
+        const today = dateFromISO(todayISO());
+        if (range === "all") return { start: null, end: today };
         const days = Number(range);
         const start = addDays(today, -(days - 1));
         return { start, end: today };
       }
 
-      function countScheduledDaysInRange(habit, startDate, endDate) {
-        const habitStart = habitTrackingStartDate(habit);
-        const start = startDate ? new Date(Math.max(habitStart, startDate)) : habitStart;
-        const end = new Date(endDate);
-        if (start > end) return 0;
-        return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-      }
-
-      function currentStreak(habit) {
-        const byDate = new Set(entries.filter((e) => e.habit_id === habit.id && e.completed).map((e) => e.entry_date));
-        let streak = 0;
-        let cursor = dateFromISO(workingTodayISO());
-        const start = habitTrackingStartDate(habit);
-        while (cursor >= start) {
-          const iso = formatDate(cursor);
-          if (byDate.has(iso)) {
-            streak += 1;
-            cursor = addDays(cursor, -1);
-            continue;
-          }
-          break;
+      function movingAverage(values, windowSize) {
+        const out = [];
+        for (let i = 0; i < values.length; i += 1) {
+          const start = Math.max(0, i - windowSize + 1);
+          const chunk = values.slice(start, i + 1);
+          out.push(Number((chunk.reduce((a, b) => a + b, 0) / chunk.length).toFixed(2)));
         }
-        return streak;
+        return out;
       }
 
-      function renderSummary(metrics) {
-        summaryGrid.innerHTML = `
-          <div class="metric">
-            <p class="metric-label">Total Habits</p>
-            <p class="metric-value">${metrics.totalHabits}</p>
-          </div>
-          <div class="metric">
-            <p class="metric-label">Completions</p>
-            <p class="metric-value">${metrics.totalCompletions}</p>
-          </div>
-          <div class="metric">
-            <p class="metric-label">Avg Completion</p>
-            <p class="metric-value">${metrics.avgCompletionPct}%</p>
-          </div>
-          <div class="metric">
-            <p class="metric-label">Best Streak</p>
-            <p class="metric-value">${metrics.bestStreak}d</p>
-          </div>
-        `;
+      function renderHeatmap() {
+        const monthValue = heatmapMonth.value;
+        if (!monthValue) return;
+
+        const [yy, mm] = monthValue.split("-").map(Number);
+        const first = new Date(yy, mm - 1, 1);
+        const last = new Date(yy, mm, 0);
+        const startWeekday = (first.getDay() + 6) % 7;
+
+        const counts = new Map();
+        for (const e of entries) {
+          if (!e.completed) continue;
+          const d = dateFromISO(e.entry_date);
+          if (d.getFullYear() === yy && d.getMonth() === mm - 1) {
+            counts.set(e.entry_date, (counts.get(e.entry_date) || 0) + 1);
+          }
+        }
+
+        const cells = [];
+        for (let i = 0; i < startWeekday; i += 1) {
+          cells.push(`<div class="heatmap-day empty"></div>`);
+        }
+
+        for (let day = 1; day <= last.getDate(); day += 1) {
+          const iso = formatDate(new Date(yy, mm - 1, day));
+          const count = counts.get(iso) || 0;
+          const intensity = scoreToIntensity(count);
+          cells.push(`<div class="heatmap-day intensity-${intensity}" title="${iso}: ${count} completions">${day}</div>`);
+        }
+
+        heatmapGrid.innerHTML = cells.join("");
       }
 
       function renderAnalytics() {
-        const range = analyticsRange.value;
-        const { start, end } = getRangeDates(range);
+        const { start, end } = getRangeDates(analyticsRange.value);
         const startISO = start ? formatDate(start) : null;
         const endISO = formatDate(end);
 
-        const habitLabels = habits.map((h) => h.name);
-        const rates = [];
+        const scopedEntries = entries.filter((e) => {
+          if (startISO && e.entry_date < startISO) return false;
+          return e.entry_date <= endISO;
+        });
+
+        const labels = sortHabits(habits).map((h) => h.name);
+        const completionRates = [];
         const streaks = [];
+
+        const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const weekdayTotals = [0, 0, 0, 0, 0, 0, 0];
 
         let totalScheduled = 0;
         let totalCompletions = 0;
-        let bestStreak = 0;
 
-        for (const habit of habits) {
-          const scheduled = countScheduledDaysInRange(habit, start, end);
-          const completed = entries.filter((e) => {
-            if (e.habit_id !== habit.id || !e.completed) return false;
-            if (startISO && e.entry_date < startISO) return false;
-            return e.entry_date <= endISO;
-          }).length;
+        for (const habit of sortHabits(habits)) {
+          const habitCreated = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
+          const effectiveStart = start ? new Date(Math.max(start, habitCreated)) : habitCreated;
+          const scheduled = Math.max(0, Math.floor((end - effectiveStart) / 86400000) + 1);
+          const completed = scopedEntries.filter((e) => e.habit_id === habit.id && e.completed).length;
+          const rate = scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
 
           totalScheduled += scheduled;
           totalCompletions += completed;
+          completionRates.push(rate);
 
-          const rate = scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
-          rates.push(rate);
-
-          const streak = currentStreak(habit);
+          const completedDates = new Set(entries.filter((e) => e.habit_id === habit.id && e.completed).map((e) => e.entry_date));
+          let streak = 0;
+          let cursor = dateFromISO(todayISO());
+          while (cursor >= habitCreated) {
+            const iso = formatDate(cursor);
+            if (completedDates.has(iso)) {
+              streak += 1;
+              cursor = addDays(cursor, -1);
+              continue;
+            }
+            break;
+          }
           streaks.push(streak);
-          if (streak > bestStreak) bestStreak = streak;
         }
 
-        const dailyMap = new Map();
-        const daysForTrend = [];
-        const trendStart = start || addDays(end, -29);
+        const trendStart = start || addDays(end, -89);
+        const days = [];
+        const byDay = new Map();
         let cursor = new Date(trendStart);
         while (cursor <= end) {
           const iso = formatDate(cursor);
-          daysForTrend.push(iso);
-          dailyMap.set(iso, 0);
+          days.push(iso);
+          byDay.set(iso, 0);
           cursor = addDays(cursor, 1);
         }
 
-        for (const e of entries) {
+        for (const e of scopedEntries) {
           if (!e.completed) continue;
-          if (!dailyMap.has(e.entry_date)) continue;
-          dailyMap.set(e.entry_date, (dailyMap.get(e.entry_date) || 0) + 1);
+          if (byDay.has(e.entry_date)) {
+            byDay.set(e.entry_date, (byDay.get(e.entry_date) || 0) + 1);
+          }
+          const weekdayIdx = (dateFromISO(e.entry_date).getDay() + 6) % 7;
+          weekdayTotals[weekdayIdx] += 1;
         }
 
-        const trendValues = daysForTrend.map((d) => dailyMap.get(d) || 0);
+        const trendValues = days.map((d) => byDay.get(d) || 0);
+        const rolling7 = movingAverage(trendValues, 7);
+        const rolling30 = movingAverage(trendValues, 30);
 
+        const daysWithAny = trendValues.filter((v) => v > 0).length;
+        const consistencyScore = trendValues.length ? Math.round((daysWithAny / trendValues.length) * 100) : 0;
         const avgCompletionPct = totalScheduled > 0 ? Math.round((totalCompletions / totalScheduled) * 100) : 0;
+
+        const bestDayIdx = weekdayTotals.indexOf(Math.max(...weekdayTotals));
+        const worstDayIdx = weekdayTotals.indexOf(Math.min(...weekdayTotals));
 
         renderSummary({
           totalHabits: habits.length,
           totalCompletions,
           avgCompletionPct,
-          bestStreak,
+          consistencyScore,
+          bestDay: weekdayNames[bestDayIdx] || "-",
+          worstDay: weekdayNames[worstDayIdx] || "-",
         });
 
         if (habitRateChart) habitRateChart.destroy();
         if (dailyTrendChart) dailyTrendChart.destroy();
         if (streakChart) streakChart.destroy();
+        if (rollingChart) rollingChart.destroy();
 
         habitRateChart = new Chart(document.getElementById("habit-rate-chart"), {
           type: "bar",
           data: {
-            labels: habitLabels,
+            labels,
             datasets: [
               {
                 label: "Completion %",
-                data: rates,
-                backgroundColor: "rgba(194, 77, 44, 0.65)",
+                data: completionRates,
+                backgroundColor: "rgba(194, 77, 44, 0.7)",
                 borderColor: "rgba(194, 77, 44, 1)",
                 borderWidth: 1,
               },
@@ -920,80 +1323,481 @@
         dailyTrendChart = new Chart(document.getElementById("daily-trend-chart"), {
           type: "line",
           data: {
-            labels: daysForTrend.map((d) => d.slice(5)),
+            labels: days.map((d) => d.slice(5)),
             datasets: [
               {
-                label: "Completions",
+                label: "Daily",
                 data: trendValues,
-                tension: 0.3,
                 borderColor: "rgba(25, 122, 75, 1)",
                 backgroundColor: "rgba(25, 122, 75, 0.2)",
                 fill: true,
+                tension: 0.3,
               },
             ],
           },
-          options: {
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+        });
+
+        rollingChart = new Chart(document.getElementById("rolling-chart"), {
+          type: "line",
+          data: {
+            labels: days.map((d) => d.slice(5)),
+            datasets: [
+              {
+                label: "7-day",
+                data: rolling7,
+                borderColor: "rgba(194, 77, 44, 1)",
+                backgroundColor: "rgba(194, 77, 44, 0.08)",
+                fill: false,
+                tension: 0.25,
+              },
+              {
+                label: "30-day",
+                data: rolling30,
+                borderColor: "rgba(31, 42, 55, 0.9)",
+                backgroundColor: "rgba(31, 42, 55, 0.08)",
+                fill: false,
+                tension: 0.25,
+              },
+            ],
           },
+          options: { plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } },
         });
 
         streakChart = new Chart(document.getElementById("streak-chart"), {
           type: "bar",
           data: {
-            labels: habitLabels,
+            labels,
             datasets: [
               {
-                label: "Current streak (days)",
+                label: "Current streak",
                 data: streaks,
                 backgroundColor: "rgba(31, 42, 55, 0.75)",
               },
             ],
           },
-          options: {
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-          },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
         });
+
+        renderHeatmap();
       }
 
-      async function handleCreateHabit(event) {
+      function renderRequests() {
+        if (!requests.length) {
+          requestList.innerHTML = `<li class="empty">No incoming requests.</li>`;
+          return;
+        }
+
+        requestList.innerHTML = requests
+          .map((r) => {
+            const name = r.requester_profile?.display_name || r.requester_profile?.handle || "Unknown";
+            const handle = r.requester_profile?.handle ? `@${r.requester_profile.handle}` : "";
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><button class="btn btn-ghost btn-small" data-action="accept-request" data-request-id="${r.id}">Accept</button></div></li>`;
+          })
+          .join("");
+      }
+
+      function renderFriends() {
+        if (!friends.length) {
+          friendsList.innerHTML = `<li class="empty">No friends yet.</li>`;
+          return;
+        }
+
+        friendsList.innerHTML = friends
+          .map((f) => {
+            const name = f.display_name || f.handle || "Unknown";
+            const handle = f.handle ? `@${f.handle}` : "";
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View habits</button></div></li>`;
+          })
+          .join("");
+      }
+
+      function renderFriendHabits() {
+        if (!selectedFriendId) {
+          friendHabits.innerHTML = `<p class="empty">Select a friend to view shared habits.</p>`;
+          return;
+        }
+
+        const friend = friends.find((f) => f.user_id === selectedFriendId);
+        const friendName = friend?.display_name || friend?.handle || "Friend";
+
+        if (!selectedFriendHabits.length) {
+          friendHabits.innerHTML = `<p class="empty">No shared habits available for ${escapeHtml(friendName)}.</p>`;
+          return;
+        }
+
+        const today = todayISO();
+        const week = weekDates(startOfWeek(new Date()));
+
+        friendHabits.innerHTML = `
+          <p class="helper" style="margin: 0 0 0.5rem">Showing habits shared by ${escapeHtml(friendName)}</p>
+          ${selectedFriendHabits
+            .map((h) => {
+              const doneWeek = week.filter((d) => {
+                const iso = formatDate(d);
+                const e = selectedFriendEntries.find((x) => x.habit_id === h.id && x.entry_date === iso && x.completed);
+                return !!e;
+              }).length;
+              const totalDone = selectedFriendEntries.filter((x) => x.habit_id === h.id && x.completed).length;
+              return `<div class="list-item"><strong>${escapeHtml(h.name)}</strong><div class="helper">${escapeHtml(h.category || "No category")} | target ${h.target_per_week}/wk | week ${doneWeek}/7 | total ${totalDone}</div></div>`;
+            })
+            .join("")}
+        `;
+      }
+
+      function beginEditHabit(habit) {
+        editingHabitId = habit.id;
+        habitFormTitle.textContent = "Edit Habit";
+        habitSubmitBtn.textContent = "Save changes";
+        habitCancelBtn.style.display = "inline-block";
+
+        document.getElementById("habit-name").value = habit.name || "";
+        document.getElementById("habit-desc").value = habit.description || "";
+        document.getElementById("habit-category").value = habit.category || "";
+        document.getElementById("habit-target").value = String(habit.target_per_week || 5);
+        document.getElementById("habit-tags").value = tagsToText(habit.tags);
+        document.getElementById("habit-visibility").value = habit.visibility || "friends";
+        document.getElementById("habit-pin").value = habit.is_pinned ? "true" : "false";
+      }
+
+      function resetHabitForm() {
+        editingHabitId = null;
+        habitForm.reset();
+        document.getElementById("habit-target").value = "5";
+        document.getElementById("habit-visibility").value = "friends";
+        document.getElementById("habit-pin").value = "false";
+
+        habitFormTitle.textContent = "Add Habit";
+        habitSubmitBtn.textContent = "Create habit";
+        habitCancelBtn.style.display = "none";
+        setStatus(formStatus, "");
+      }
+
+      async function handleCreateOrUpdateHabit(event) {
         event.preventDefault();
-        setFormStatus("");
+        setStatus(formStatus, "");
 
         const name = document.getElementById("habit-name").value.trim();
         const description = document.getElementById("habit-desc").value.trim();
+        const category = document.getElementById("habit-category").value.trim();
         const targetPerWeek = Number(document.getElementById("habit-target").value);
+        const tags = tagsFromText(document.getElementById("habit-tags").value);
+        const visibility = document.getElementById("habit-visibility").value;
+        const isPinned = document.getElementById("habit-pin").value === "true";
 
         if (!name) {
-          setFormStatus("Please fill all required fields.");
+          setStatus(formStatus, "Name is required.");
           return;
         }
 
-        const { data, error } = await supabase
-          .from("habits")
-          .insert({
-            user_id: currentUser.id,
-            name,
-            description,
-            start_date: "2000-01-01",
-            end_date: "2100-12-31",
-            target_per_week: targetPerWeek,
-          })
-          .select()
-          .single();
+        if (editingHabitId) {
+          const { error } = await supabase
+            .from("habits")
+            .update({ name, description, category, target_per_week: targetPerWeek, tags, visibility, is_pinned: isPinned })
+            .eq("id", editingHabitId)
+            .eq("user_id", currentUser.id);
+
+          if (error) {
+            setStatus(formStatus, error.message);
+            return;
+          }
+
+          setStatus(formStatus, "Habit updated.");
+          resetHabitForm();
+          await syncFromServer();
+          return;
+        }
+
+        const maxSort = habits.reduce((acc, h) => Math.max(acc, h.sort_order ?? 0), 0);
+
+        const { error } = await supabase.from("habits").insert({
+          user_id: currentUser.id,
+          name,
+          description,
+          category,
+          target_per_week: targetPerWeek,
+          tags,
+          visibility,
+          is_pinned: isPinned,
+          sort_order: maxSort + 1,
+          start_date: "2000-01-01",
+          end_date: "2100-12-31",
+        });
 
         if (error) {
-          setFormStatus(error.message);
+          setStatus(formStatus, error.message);
           return;
         }
 
-        habits.unshift(data);
-        habitForm.reset();
-        document.getElementById("habit-target").value = "5";
-        setFormStatus("Habit created.");
-        renderHabits();
-        renderAnalytics();
+        resetHabitForm();
+        setStatus(formStatus, "Habit created.");
+        await syncFromServer();
+      }
+
+      async function toggleDay(habitId, dayISO) {
+        const existing = getEntry(habitId, dayISO);
+
+        if (!existing) {
+          const { error } = await supabase.from("habit_entries").insert({
+            habit_id: habitId,
+            user_id: currentUser.id,
+            entry_date: dayISO,
+            completed: true,
+            note: null,
+          });
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await syncFromServer();
+          return;
+        }
+
+        const nextCompleted = !existing.completed;
+        if (!nextCompleted && !existing.note) {
+          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+        } else {
+          const { error } = await supabase.from("habit_entries").update({ completed: nextCompleted }).eq("id", existing.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+        }
+
+        await syncFromServer();
+      }
+
+      async function saveDayNote(habitId) {
+        const daySelect = habitList.querySelector(`select[data-action="note-day"][data-habit-id="${habitId}"]`);
+        const noteInput = habitList.querySelector(`input[data-action="note-input"][data-habit-id="${habitId}"]`);
+        if (!daySelect || !noteInput) return;
+
+        const dayISO = daySelect.value;
+        const note = noteInput.value.trim();
+        selectedNoteDayByHabit.set(habitId, dayISO);
+
+        const existing = getEntry(habitId, dayISO);
+        if (!existing) {
+          if (!note) return;
+          const { error } = await supabase.from("habit_entries").insert({
+            habit_id: habitId,
+            user_id: currentUser.id,
+            entry_date: dayISO,
+            completed: false,
+            note,
+          });
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await syncFromServer();
+          return;
+        }
+
+        if (!note && !existing.completed) {
+          const { error } = await supabase.from("habit_entries").delete().eq("id", existing.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await syncFromServer();
+          return;
+        }
+
+        const { error } = await supabase.from("habit_entries").update({ note }).eq("id", existing.id);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await syncFromServer();
+      }
+
+      async function moveHabit(habitId, direction) {
+        const ordered = sortHabits(habits);
+        const index = ordered.findIndex((h) => h.id === habitId);
+        if (index < 0) return;
+
+        const swapIndex = direction === "up" ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= ordered.length) return;
+
+        const a = ordered[index];
+        const b = ordered[swapIndex];
+
+        const aOrder = a.sort_order ?? 0;
+        const bOrder = b.sort_order ?? 0;
+
+        const updates = [
+          supabase.from("habits").update({ sort_order: bOrder }).eq("id", a.id).eq("user_id", currentUser.id),
+          supabase.from("habits").update({ sort_order: aOrder }).eq("id", b.id).eq("user_id", currentUser.id),
+        ];
+
+        const results = await Promise.all(updates);
+        const err = results.find((r) => r.error);
+        if (err?.error) {
+          alert(err.error.message);
+          return;
+        }
+
+        await syncFromServer();
+      }
+
+      async function deleteHabit(habitId) {
+        const habit = habits.find((h) => h.id === habitId);
+        if (!habit) return;
+        if (!window.confirm(`Delete habit "${habit.name}"? This removes its history.`)) return;
+
+        const { error } = await supabase.from("habits").delete().eq("id", habitId).eq("user_id", currentUser.id);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await syncFromServer();
+      }
+
+      async function saveProfile() {
+        const display_name = profileDisplayNameInput.value.trim();
+        const handle = profileHandleInput.value.trim().toLowerCase();
+
+        if (!handle || !/^[a-z0-9_]{3,30}$/.test(handle)) {
+          setStatus(profileStatus, "Handle must be 3-30 chars: lowercase letters, numbers, _. ");
+          return;
+        }
+
+        const { error } = await supabase
+          .from("profiles")
+          .update({ display_name, handle })
+          .eq("user_id", currentUser.id);
+
+        if (error) {
+          setStatus(profileStatus, error.message);
+          return;
+        }
+
+        setStatus(profileStatus, "Profile saved.");
+        await syncFromServer();
+      }
+
+      async function sendFriendRequest() {
+        setStatus(friendStatus, "");
+        const handle = document.getElementById("friend-handle").value.trim().toLowerCase();
+        if (!handle) {
+          setStatus(friendStatus, "Enter a handle.");
+          return;
+        }
+
+        const { data: target, error: targetErr } = await supabase
+          .from("profiles")
+          .select("user_id, handle, display_name")
+          .eq("handle", handle)
+          .maybeSingle();
+
+        if (targetErr || !target) {
+          setStatus(friendStatus, "Handle not found.");
+          return;
+        }
+
+        if (target.user_id === currentUser.id) {
+          setStatus(friendStatus, "You cannot add yourself.");
+          return;
+        }
+
+        const { data: existing, error: exErr } = await supabase
+          .from("friendships")
+          .select("id, requester_id, addressee_id, status")
+          .or(
+            `and(requester_id.eq.${currentUser.id},addressee_id.eq.${target.user_id}),and(requester_id.eq.${target.user_id},addressee_id.eq.${currentUser.id})`,
+          )
+          .maybeSingle();
+
+        if (exErr) {
+          setStatus(friendStatus, exErr.message);
+          return;
+        }
+
+        if (existing) {
+          if (existing.status === "accepted") {
+            setStatus(friendStatus, "Already friends.");
+            return;
+          }
+          if (existing.requester_id === target.user_id && existing.addressee_id === currentUser.id) {
+            const { error } = await supabase
+              .from("friendships")
+              .update({ status: "accepted", responded_at: new Date().toISOString() })
+              .eq("id", existing.id);
+            if (error) {
+              setStatus(friendStatus, error.message);
+              return;
+            }
+            setStatus(friendStatus, "Request accepted.");
+            await syncFromServer();
+            return;
+          }
+
+          setStatus(friendStatus, "Request already pending.");
+          return;
+        }
+
+        const { error } = await supabase.from("friendships").insert({
+          requester_id: currentUser.id,
+          addressee_id: target.user_id,
+          status: "pending",
+        });
+
+        if (error) {
+          setStatus(friendStatus, error.message);
+          return;
+        }
+
+        setStatus(friendStatus, "Request sent.");
+        document.getElementById("friend-handle").value = "";
+        await syncFromServer();
+      }
+
+      async function acceptRequest(requestId) {
+        const { error } = await supabase
+          .from("friendships")
+          .update({ status: "accepted", responded_at: new Date().toISOString() })
+          .eq("id", requestId)
+          .eq("addressee_id", currentUser.id);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await syncFromServer();
+      }
+
+      function bindTabs() {
+        const tabHabits = document.getElementById("tab-habits");
+        const tabAnalytics = document.getElementById("tab-analytics");
+        const tabSocial = document.getElementById("tab-social");
+
+        const viewHabits = document.getElementById("view-habits");
+        const viewAnalytics = document.getElementById("view-analytics");
+        const viewSocial = document.getElementById("view-social");
+
+        function show(target) {
+          tabHabits.classList.toggle("active", target === "habits");
+          tabAnalytics.classList.toggle("active", target === "analytics");
+          tabSocial.classList.toggle("active", target === "social");
+
+          viewHabits.style.display = target === "habits" ? "block" : "none";
+          viewAnalytics.style.display = target === "analytics" ? "block" : "none";
+          viewSocial.style.display = target === "social" ? "block" : "none";
+
+          if (target === "analytics") renderAnalytics();
+        }
+
+        tabHabits.addEventListener("click", () => show("habits"));
+        tabAnalytics.addEventListener("click", () => show("analytics"));
+        tabSocial.addEventListener("click", () => show("social"));
       }
 
       function bindEvents() {
@@ -1003,45 +1807,91 @@
           window.location.href = "/login.html";
         });
 
-        document.getElementById("refresh-btn").addEventListener("click", async () => {
-          await syncFromServer();
-        });
-
-        habitForm.addEventListener("submit", handleCreateHabit);
-
+        document.getElementById("refresh-btn").addEventListener("click", syncFromServer);
         document.getElementById("prev-week").addEventListener("click", () => {
           viewWeekStart = addDays(viewWeekStart, -7);
           renderHabits();
         });
 
-        habitList.addEventListener("click", async (event) => {
-          const btn = event.target.closest("button.day-btn");
-          if (!btn || btn.disabled) return;
-          const habitId = btn.dataset.habitId;
-          const dayISO = btn.dataset.day;
-          await toggleHabitDay(habitId, dayISO);
-        });
+        filterQuery.addEventListener("input", renderHabits);
+        filterCategory.addEventListener("change", renderHabits);
+        filterVisibility.addEventListener("change", renderHabits);
 
         analyticsRange.addEventListener("change", renderAnalytics);
+        heatmapMonth.addEventListener("change", renderHeatmap);
 
-        const tabHabits = document.getElementById("tab-habits");
-        const tabAnalytics = document.getElementById("tab-analytics");
-        const viewHabits = document.getElementById("view-habits");
-        const viewAnalytics = document.getElementById("view-analytics");
+        habitForm.addEventListener("submit", handleCreateOrUpdateHabit);
+        habitCancelBtn.addEventListener("click", resetHabitForm);
 
-        tabHabits.addEventListener("click", () => {
-          tabHabits.classList.add("active");
-          tabAnalytics.classList.remove("active");
-          viewHabits.style.display = "block";
-          viewAnalytics.style.display = "none";
+        habitList.addEventListener("change", (event) => {
+          const select = event.target.closest("select[data-action='note-day']");
+          if (!select) return;
+          const habitId = select.dataset.habitId;
+          selectedNoteDayByHabit.set(habitId, select.value);
+          renderHabits();
         });
 
-        tabAnalytics.addEventListener("click", () => {
-          tabAnalytics.classList.add("active");
-          tabHabits.classList.remove("active");
-          viewHabits.style.display = "none";
-          viewAnalytics.style.display = "block";
-          renderAnalytics();
+        habitList.addEventListener("click", async (event) => {
+          const target = event.target.closest("[data-action]");
+          if (!target) return;
+          const action = target.dataset.action;
+          const habitId = target.dataset.habitId;
+
+          if (action === "toggle-day") {
+            await toggleDay(habitId, target.dataset.day);
+            return;
+          }
+          if (action === "save-note") {
+            await saveDayNote(habitId);
+            return;
+          }
+          if (action === "edit") {
+            const habit = habits.find((h) => h.id === habitId);
+            if (habit) beginEditHabit(habit);
+            return;
+          }
+          if (action === "delete") {
+            await deleteHabit(habitId);
+            return;
+          }
+          if (action === "pin") {
+            const habit = habits.find((h) => h.id === habitId);
+            if (!habit) return;
+            const { error } = await supabase
+              .from("habits")
+              .update({ is_pinned: !habit.is_pinned })
+              .eq("id", habitId)
+              .eq("user_id", currentUser.id);
+            if (error) {
+              alert(error.message);
+              return;
+            }
+            await syncFromServer();
+            return;
+          }
+          if (action === "move-up") {
+            await moveHabit(habitId, "up");
+            return;
+          }
+          if (action === "move-down") {
+            await moveHabit(habitId, "down");
+            return;
+          }
+        });
+
+        document.getElementById("save-profile-btn").addEventListener("click", saveProfile);
+        document.getElementById("send-request-btn").addEventListener("click", sendFriendRequest);
+
+        requestList.addEventListener("click", async (event) => {
+          const btn = event.target.closest("[data-action='accept-request']");
+          if (!btn) return;
+          await acceptRequest(btn.dataset.requestId);
+        });
+
+        friendsList.addEventListener("click", async (event) => {
+          const btn = event.target.closest("[data-action='view-friend']");
+          if (!btn) return;
+          await loadFriendHabits(btn.dataset.friendId);
         });
       }
 
@@ -1049,10 +1899,16 @@
         const user = await requireUser();
         if (!user) return;
 
+        const now = new Date();
+        heatmapMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+        bindTabs();
         bindEvents();
         setupRealtime();
         window.addEventListener("beforeunload", teardownRealtime);
+
         await syncFromServer();
+        resetHabitForm();
       }
 
       init();
