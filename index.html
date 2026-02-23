@@ -3,15 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>STRIVE</title>
+    <title>STRIVE | Login</title>
     <style>
       :root {
         --bg: #f4f1ea;
+        --panel: #fffaf2;
         --text: #1f2a37;
         --accent: #c24d2c;
+        --muted: #6b7280;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
       body {
         margin: 0;
@@ -24,39 +28,151 @@
       }
 
       main {
-        text-align: center;
-        padding: 2rem;
+        width: min(90vw, 430px);
+        background: var(--panel);
+        border: 1px solid #ecd8bf;
+        border-radius: 16px;
+        padding: 1.5rem;
       }
 
       h1 {
-        margin: 0;
-        font-size: clamp(2rem, 6vw, 4rem);
-        letter-spacing: 0.08em;
+        margin: 0 0 0.25rem;
+        font-size: 1.6rem;
+        letter-spacing: 0.05em;
       }
 
       p {
-        margin-top: 0.75rem;
-        font-size: 1.1rem;
+        margin: 0 0 1rem;
+        color: var(--muted);
       }
 
-      .tag {
-        display: inline-block;
-        margin-top: 1.5rem;
-        padding: 0.35rem 0.7rem;
-        border: 1px solid var(--accent);
-        color: var(--accent);
-        border-radius: 999px;
-        font-size: 0.85rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+      label {
+        display: block;
+        margin: 0.7rem 0 0.35rem;
+        font-size: 0.9rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.7rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid #d3c3ad;
+        font-size: 1rem;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.65;
+        cursor: wait;
+      }
+
+      #status {
+        min-height: 1.5rem;
+        margin-top: 0.85rem;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .small {
+        margin-top: 0.6rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.78rem;
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>STRIVE</h1>
-      <p>Placeholder site is live. Update pushed on February 23, 2026.</p>
-      <span class="tag">Version 0.2</span>
+      <h1>STRIVE Login</h1>
+      <p>Sign in with your Supabase email account.</p>
+
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+
+        <button id="login-btn" type="submit">Log in</button>
+      </form>
+
+      <div id="status"></div>
+      <div class="small">
+        Set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in this file before deploying.
+      </div>
     </main>
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      // Replace these with your Supabase project values.
+      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
+
+      const statusEl = document.getElementById("status");
+      const formEl = document.getElementById("login-form");
+      const loginBtn = document.getElementById("login-btn");
+
+      function setStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      const missingConfig =
+        SUPABASE_URL.includes("YOUR_SUPABASE_URL") ||
+        SUPABASE_ANON_KEY.includes("YOUR_SUPABASE_ANON_KEY");
+
+      if (missingConfig) {
+        setStatus("Missing Supabase config in index.html.");
+      }
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const { data: existingSession } = await supabase.auth.getSession();
+      if (existingSession.session) {
+        window.location.href = "/app.html";
+      }
+
+      formEl.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (missingConfig) {
+          setStatus("Add SUPABASE_URL and SUPABASE_ANON_KEY first.");
+          return;
+        }
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        loginBtn.disabled = true;
+        setStatus("Signing in...");
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+        loginBtn.disabled = false;
+
+        if (error) {
+          setStatus(error.message);
+          return;
+        }
+
+        setStatus("Success. Redirecting...");
+        window.location.href = "/app.html";
+      });
+    </script>
   </body>
 </html>

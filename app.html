@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STRIVE | App</title>
+    <style>
+      :root {
+        --bg: #f4f1ea;
+        --panel: #fffaf2;
+        --text: #1f2a37;
+        --accent: #c24d2c;
+        --muted: #6b7280;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top left, #fff8ec 0%, var(--bg) 65%);
+        color: var(--text);
+      }
+
+      main {
+        width: min(90vw, 640px);
+        background: var(--panel);
+        border: 1px solid #ecd8bf;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.8rem;
+      }
+
+      #welcome {
+        margin-top: 0.85rem;
+        font-size: 1.1rem;
+        color: var(--muted);
+      }
+
+      button {
+        margin-top: 1rem;
+        padding: 0.7rem 1.1rem;
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>STRIVE</h1>
+      <p id="welcome">Checking session...</p>
+      <button id="logout">Log out</button>
+    </main>
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      // Must match index.html
+      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
+
+      const welcomeEl = document.getElementById("welcome");
+      const logoutBtn = document.getElementById("logout");
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        window.location.href = "/index.html";
+      } else {
+        welcomeEl.textContent = `Logged in as ${data.user.email}`;
+      }
+
+      logoutBtn.addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/index.html";
+      });
+    </script>
+  </body>
+</html>
