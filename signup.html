@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>STRIVE | Sign Up</title>
+    <style>
+      :root {
+        --bg: #f4f1ea;
+        --panel: #fffaf2;
+        --text: #1f2a37;
+        --accent: #c24d2c;
+        --muted: #6b7280;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top left, #fff8ec 0%, var(--bg) 65%);
+        color: var(--text);
+      }
+
+      main {
+        width: min(90vw, 430px);
+        background: var(--panel);
+        border: 1px solid #ecd8bf;
+        border-radius: 16px;
+        padding: 1.5rem;
+      }
+
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.6rem;
+        letter-spacing: 0.05em;
+      }
+
+      p {
+        margin: 0 0 1rem;
+        color: var(--muted);
+      }
+
+      label {
+        display: block;
+        margin: 0.7rem 0 0.35rem;
+        font-size: 0.9rem;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.7rem 0.75rem;
+        border-radius: 10px;
+        border: 1px solid #d3c3ad;
+        font-size: 1rem;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.65;
+        cursor: wait;
+      }
+
+      #status {
+        min-height: 1.5rem;
+        margin-top: 0.85rem;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .link-row {
+        margin-top: 1rem;
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .link-row a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>STRIVE Sign Up</h1>
+      <p>Create your account with email and password.</p>
+
+      <form id="signup-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="new-password" minlength="6" required />
+
+        <button id="signup-btn" type="submit">Create account</button>
+      </form>
+
+      <div id="status"></div>
+      <div class="link-row">
+        Already have an account? <a href="/login.html">Go to log in</a>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
+
+      const statusEl = document.getElementById("status");
+      const formEl = document.getElementById("signup-form");
+      const signupBtn = document.getElementById("signup-btn");
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      function setStatus(message) {
+        statusEl.textContent = message;
+      }
+
+      const { data: existingSession } = await supabase.auth.getSession();
+      if (existingSession.session) {
+        window.location.href = "/app.html";
+      }
+
+      formEl.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        signupBtn.disabled = true;
+        setStatus("Creating account...");
+
+        const { error } = await supabase.auth.signUp({ email, password });
+
+        signupBtn.disabled = false;
+
+        if (error) {
+          setStatus(error.message);
+          return;
+        }
+
+        setStatus("Account created. Check your email to confirm, then log in.");
+      });
+    </script>
+  </body>
+</html>
