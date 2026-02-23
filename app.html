@@ -697,8 +697,8 @@
                   <select id="habit-category"></select>
                 </div>
                 <div>
-                  <label for="habit-target-count">Target count</label>
-                  <input id="habit-target-count" type="number" min="1" max="7" value="5" />
+                  <label for="habit-target-count">Target count <span class="helper" style="display:inline; margin-left: 0.2rem;">(every day)</span></label>
+                  <input id="habit-target-count" type="number" min="1" max="7" value="7" />
                 </div>
               </div>
 
@@ -2095,7 +2095,7 @@
       function resetHabitForm() {
         editingHabitId = null;
         habitForm.reset();
-        document.getElementById("habit-target-count").value = "5";
+        document.getElementById("habit-target-count").value = "7";
         document.getElementById("habit-timeline").value = "weekly";
         document.getElementById("habit-custom-days").value = "21";
         updateCustomDaysVisibility();
