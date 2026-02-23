@@ -1273,7 +1273,7 @@
             .from("profiles")
             .insert({
               user_id: currentUser.id,
-              display_name: currentUser.email,
+              display_name: null,
               handle: fallbackHandle,
               settings: DEFAULT_SETTINGS,
             })
@@ -1364,7 +1364,7 @@
           friends = friendIds
             .map((id) => friendProfiles.find((p) => p.user_id === id))
             .filter(Boolean)
-            .sort((a, b) => (a.display_name || a.handle || "").localeCompare(b.display_name || b.handle || ""));
+            .sort((a, b) => (a.handle || "").localeCompare(b.handle || ""));
         }
 
         const { data: blockedRows, error: blockedError } = await supabase
@@ -1822,9 +1822,8 @@
 
         friendsList.innerHTML = friends
           .map((f) => {
-            const name = f.display_name || f.handle || "Unknown";
-            const handle = f.handle ? `@${f.handle}` : "";
-            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(name)}</strong><div class="helper">${escapeHtml(handle)}</div></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View</button><button class="btn btn-ghost btn-small" data-action="toggle-block-friend" data-friend-id="${f.user_id}">${f.is_blocked ? "Unblock" : "Block"}</button><button class="btn btn-danger btn-small" data-action="remove-friend" data-friend-id="${f.user_id}">Unfriend</button></div></div></li>`;
+            const handle = f.handle ? `@${f.handle}` : "@unknown";
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View</button><button class="btn btn-ghost btn-small" data-action="toggle-block-friend" data-friend-id="${f.user_id}">${f.is_blocked ? "Unblock" : "Block"}</button><button class="btn btn-danger btn-small" data-action="remove-friend" data-friend-id="${f.user_id}">Unfriend</button></div></div></li>`;
           })
           .join("");
       }
@@ -1836,10 +1835,10 @@
         }
 
         const friend = friends.find((f) => f.user_id === selectedFriendId);
-        const friendName = friend?.display_name || friend?.handle || "Friend";
+        const friendHandle = friend?.handle ? `@${friend.handle}` : "@unknown";
 
         if (!selectedFriendHabits.length) {
-          friendHabits.innerHTML = `<p class="empty">No shared habits available for ${escapeHtml(friendName)}.</p>`;
+          friendHabits.innerHTML = `<p class="empty">No shared habits available for ${escapeHtml(friendHandle)}.</p>`;
           return;
         }
 
@@ -1847,7 +1846,7 @@
         const week = weekDates(startOfWeek(new Date()));
 
         friendHabits.innerHTML = `
-          <p class="helper" style="margin: 0 0 0.5rem">Showing habits shared by ${escapeHtml(friendName)}</p>
+          <p class="helper" style="margin: 0 0 0.5rem">Showing habits shared by ${escapeHtml(friendHandle)}</p>
           ${selectedFriendHabits
             .map((h) => {
               const doneWeek = week.filter((d) => {
