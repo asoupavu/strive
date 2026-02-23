@@ -394,17 +394,6 @@
               <label for="habit-desc">Description</label>
               <textarea id="habit-desc" maxlength="240" placeholder="Optional"></textarea>
 
-              <div class="row">
-                <div>
-                  <label for="habit-start">Start date</label>
-                  <input id="habit-start" type="date" required />
-                </div>
-                <div>
-                  <label for="habit-end">End date</label>
-                  <input id="habit-end" type="date" required />
-                </div>
-              </div>
-
               <label for="habit-target">Target days per week</label>
               <select id="habit-target">
                 <option value="7">7 (daily)</option>
@@ -523,6 +512,15 @@
 
       function inRange(dateISO, startISO, endISO) {
         return dateISO >= startISO && dateISO <= endISO;
+      }
+
+      function habitTrackingStartDate(habit) {
+        if (habit.created_at) {
+          const d = new Date(habit.created_at);
+          d.setHours(0, 0, 0, 0);
+          return d;
+        }
+        return dateFromISO(workingTodayISO());
       }
 
       function setFormStatus(msg) {
@@ -689,12 +687,12 @@
             const completedCount = entries.filter((e) => e.habit_id === habit.id && e.completed).length;
             const totalDays = Math.max(
               1,
-              Math.floor((dateFromISO(habit.end_date) - dateFromISO(habit.start_date)) / (1000 * 60 * 60 * 24)) + 1,
+              Math.floor((dateFromISO(workingTodayISO()) - habitTrackingStartDate(habit)) / (1000 * 60 * 60 * 24)) + 1,
             );
             const completionPct = Math.min(100, Math.round((completedCount / totalDays) * 100));
             const activeThisWeek = days.filter((day) => {
               const iso = formatDate(day);
-              return inRange(iso, habit.start_date, habit.end_date) && iso <= todayISO;
+              return iso <= todayISO;
             }).length;
             const doneThisWeek = days.filter((day) => {
               const iso = formatDate(day);
@@ -705,7 +703,7 @@
               .map((day) => {
                 const iso = formatDate(day);
                 const done = entriesMap.has(getEntryKey(habit.id, iso));
-                const outside = !inRange(iso, habit.start_date, habit.end_date) || iso > todayISO;
+                const outside = iso > todayISO;
                 const isToday = iso === todayISO;
                 const cls = `day-btn${done ? " done" : ""}${outside ? " outside" : ""}${isToday ? " today" : ""}`;
                 return `<button class="${cls}" data-habit-id="${habit.id}" data-day="${iso}" ${outside ? "disabled" : ""}><span>${day.toLocaleDateString([], {
@@ -721,7 +719,6 @@
                     <h3 class="habit-name">${escapeHtml(habit.name)}</h3>
                     ${habit.description ? `<p class="habit-desc">${escapeHtml(habit.description)}</p>` : ""}
                     <div class="habit-meta">
-                      <span class="meta-pill">${friendlyRange(habit.start_date, habit.end_date)}</span>
                       <span class="meta-pill">Target ${habit.target_per_week}/wk</span>
                       <span class="meta-pill">This week ${doneThisWeek}/${activeThisWeek || 0}</span>
                     </div>
@@ -791,10 +788,9 @@
       }
 
       function countScheduledDaysInRange(habit, startDate, endDate) {
-        const habitStart = dateFromISO(habit.start_date);
-        const habitEnd = dateFromISO(habit.end_date);
+        const habitStart = habitTrackingStartDate(habit);
         const start = startDate ? new Date(Math.max(habitStart, startDate)) : habitStart;
-        const end = new Date(Math.min(habitEnd, endDate));
+        const end = new Date(endDate);
         if (start > end) return 0;
         return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
       }
@@ -803,13 +799,9 @@
         const byDate = new Set(entries.filter((e) => e.habit_id === habit.id && e.completed).map((e) => e.entry_date));
         let streak = 0;
         let cursor = dateFromISO(workingTodayISO());
-        const start = dateFromISO(habit.start_date);
+        const start = habitTrackingStartDate(habit);
         while (cursor >= start) {
           const iso = formatDate(cursor);
-          if (iso > habit.end_date) {
-            cursor = addDays(cursor, -1);
-            continue;
-          }
           if (byDate.has(iso)) {
             streak += 1;
             cursor = addDays(cursor, -1);
@@ -972,17 +964,10 @@
 
         const name = document.getElementById("habit-name").value.trim();
         const description = document.getElementById("habit-desc").value.trim();
-        const startDate = document.getElementById("habit-start").value;
-        const endDate = document.getElementById("habit-end").value;
         const targetPerWeek = Number(document.getElementById("habit-target").value);
 
-        if (!name || !startDate || !endDate) {
+        if (!name) {
           setFormStatus("Please fill all required fields.");
-          return;
-        }
-
-        if (endDate < startDate) {
-          setFormStatus("End date must be on or after start date.");
           return;
         }
 
@@ -992,8 +977,8 @@
             user_id: currentUser.id,
             name,
             description,
-            start_date: startDate,
-            end_date: endDate,
+            start_date: "2000-01-01",
+            end_date: "2100-12-31",
             target_per_week: targetPerWeek,
           })
           .select()
@@ -1067,9 +1052,6 @@
       }
 
       async function init() {
-        document.getElementById("habit-start").value = workingTodayISO();
-        document.getElementById("habit-end").value = formatDate(addDays(new Date(), 30));
-
         const user = await requireUser();
         if (!user) return;
 
