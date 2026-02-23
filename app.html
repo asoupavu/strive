@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STRIVE | Habit Tracker</title>
+    <link rel="icon" type="image/png" href="/strive.png" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       :root {
@@ -55,13 +56,26 @@
 
       .brand {
         margin: 0;
-        line-height: 0;
+      }
+
+      .brand-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
       }
 
       .brand img {
         height: 56px;
         width: auto;
         display: block;
+      }
+
+      .brand-tag {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: var(--text);
+        white-space: nowrap;
       }
 
       .who {
@@ -644,7 +658,12 @@
     <div class="shell">
       <header class="topbar">
         <div>
-          <h1 class="brand"><img src="/strive.png" alt="STRIVE" /></h1>
+          <h1 class="brand">
+            <span class="brand-wrap">
+              <img src="/strive.png" alt="STRIVE" />
+              <span class="brand-tag">For Progress</span>
+            </span>
+          </h1>
           <p id="user-line" class="who">Checking session...</p>
         </div>
         <div class="top-actions">
