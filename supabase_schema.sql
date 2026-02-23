@@ -23,6 +23,7 @@ alter table public.habits add column if not exists tags text[] not null default 
 alter table public.habits add column if not exists visibility text not null default 'friends' check (visibility in ('friends', 'private'));
 alter table public.habits add column if not exists is_pinned boolean not null default false;
 alter table public.habits add column if not exists sort_order integer not null default 0;
+alter table public.habits alter column is_pinned set default true;
 
 create table if not exists public.habit_entries (
   id uuid primary key default gen_random_uuid(),
