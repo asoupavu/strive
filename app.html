@@ -1173,7 +1173,7 @@
       let profile = null;
       let habits = [];
       let entries = [];
-      let viewWeekStart = currentRollingWeekStart();
+      let viewWeekStart = startOfWeek(new Date());
       let editingHabitId = null;
       let isHabitFormCollapsed = false;
       let selectedNoteDayByHabit = new Map();
@@ -1241,10 +1241,6 @@
         const days = [];
         for (let i = 0; i < 7; i += 1) days.push(addDays(start, i));
         return days;
-      }
-
-      function currentRollingWeekStart() {
-        return dateFromISO(formatDate(addDays(new Date(), -6)));
       }
 
       function escapeHtml(str) {
@@ -1456,7 +1452,7 @@
       function updateSetting(key, value) {
         userSettings = { ...userSettings, [key]: value };
         applySettingsToUi();
-        viewWeekStart = currentRollingWeekStart();
+        viewWeekStart = startOfWeek(new Date());
         renderHabits();
         if (currentTab === "analytics") renderAnalytics();
         scheduleSettingsSave();
@@ -1524,7 +1520,7 @@
       function weekTitle() {
         const end = addDays(viewWeekStart, 6);
         weekLabel.textContent = `${viewWeekStart.toLocaleDateString()} - ${end.toLocaleDateString()}`;
-        const currentWeekStart = currentRollingWeekStart();
+        const currentWeekStart = startOfWeek(new Date());
         const isCurrentWeek = formatDate(viewWeekStart) === formatDate(currentWeekStart);
         nextWeekBtn.disabled = isCurrentWeek;
         nextWeekBtn.style.visibility = isCurrentWeek ? "hidden" : "visible";
@@ -3125,7 +3121,7 @@
         window.addEventListener("beforeunload", teardownRealtime);
 
         await syncFromServer({ includeHabits: true, includeSocial: true, showLoading: true });
-        viewWeekStart = currentRollingWeekStart();
+        viewWeekStart = startOfWeek(new Date());
         resetHabitForm();
         updateCustomDaysVisibility();
         if (switchTab) await switchTab(userSettings.defaultStartTab || "habits");
