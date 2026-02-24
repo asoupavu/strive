@@ -549,6 +549,52 @@
         gap: 0.7rem;
       }
 
+      .xp-overview {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 0.5rem 0.58rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .xp-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .xp-level-pill {
+        border: 1px solid var(--accent);
+        background: var(--accent-soft);
+        border-radius: 999px;
+        padding: 0.12rem 0.48rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .xp-total-text {
+        color: var(--text);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .xp-progress-track {
+        margin-top: 0.34rem;
+        width: 100%;
+        height: 7px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #f0e3d3;
+      }
+
+      .xp-progress-bar {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width 0.18s ease;
+      }
+
       .settings-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -729,6 +775,33 @@
         align-items: center;
       }
 
+      .friend-meta {
+        margin-top: 0.12rem;
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .leaderboard-rank {
+        font-size: 0.86rem;
+        font-weight: 700;
+        color: var(--muted);
+        min-width: 34px;
+        text-align: center;
+      }
+
+      .leaderboard-left {
+        display: flex;
+        align-items: center;
+        gap: 0.42rem;
+        min-width: 0;
+      }
+
+      .leaderboard-score {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+
       .friend-actions {
         display: flex;
         gap: 0.3rem;
@@ -888,7 +961,7 @@
                 <button id="habit-submit-btn" class="btn btn-primary" type="submit" style="flex: 1">Create habit</button>
                 <button id="habit-cancel-btn" class="btn btn-ghost" type="button" style="display: none">Cancel</button>
               </div>
-              <p class="helper">Tip: Click a day to toggle completion. Save notes per day below each habit.</p>
+              <p class="helper">Tip: Click a day to toggle completion and earn XP. Save notes per day below each habit.</p>
               <div id="form-status" class="status"></div>
               </form>
             </div>
@@ -900,6 +973,15 @@
               <div id="week-label" class="week-label"></div>
               <button id="next-week" class="btn btn-ghost">Next week</button>
               <span id="habit-count" class="pill">0 habits</span>
+            </div>
+
+            <div id="xp-overview" class="xp-overview">
+              <div class="xp-topline">
+                <span id="xp-level-pill" class="xp-level-pill">Level 1</span>
+                <span id="xp-total-text" class="xp-total-text">0 XP</span>
+              </div>
+              <div class="xp-progress-track"><div id="xp-progress-bar" class="xp-progress-bar" style="width: 0%"></div></div>
+              <div id="xp-next-level-text" class="helper" style="margin-top: 0.28rem">100 XP to level 2</div>
             </div>
 
             <div class="toolbar">
@@ -988,6 +1070,8 @@
 
           <main class="card">
             <div id="social-main-default">
+              <h2 class="section-title">XP Leaderboard</h2>
+              <ul id="leaderboard-list" class="list" style="margin-bottom: 0.7rem"></ul>
               <h2 class="section-title">Friends</h2>
               <ul id="friends-list" class="list" style="margin-bottom: 0.7rem"></ul>
             </div>
@@ -1181,6 +1265,10 @@
       const habitForm = document.getElementById("habit-form");
       const habitList = document.getElementById("habit-list");
       const habitCount = document.getElementById("habit-count");
+      const xpLevelPill = document.getElementById("xp-level-pill");
+      const xpTotalText = document.getElementById("xp-total-text");
+      const xpProgressBar = document.getElementById("xp-progress-bar");
+      const xpNextLevelText = document.getElementById("xp-next-level-text");
       const weekLabel = document.getElementById("week-label");
       const nextWeekBtn = document.getElementById("next-week");
       const summaryGrid = document.getElementById("summary-grid");
@@ -1208,6 +1296,7 @@
       const friendStatus = document.getElementById("friend-status");
       const requestList = document.getElementById("request-list");
       const friendsList = document.getElementById("friends-list");
+      const leaderboardList = document.getElementById("leaderboard-list");
       const socialMainDefault = document.getElementById("social-main-default");
       const socialFriendAnalyticsView = document.getElementById("social-friend-analytics-view");
       const friendAnalyticsIndicator = document.getElementById("friend-analytics-indicator");
@@ -1285,6 +1374,8 @@
         showSyncHint: true,
         collapseHabitPanel: false,
       };
+
+      const XP_PER_LEVEL = 100;
 
       let currentUser = null;
       let profile = null;
@@ -1663,6 +1754,53 @@
         return 4;
       }
 
+      function normalizeXp(value) {
+        const xp = Number(value);
+        if (!Number.isFinite(xp)) return 0;
+        return Math.max(0, Math.floor(xp));
+      }
+
+      function levelFromXp(xp) {
+        return Math.floor(normalizeXp(xp) / XP_PER_LEVEL) + 1;
+      }
+
+      function profileXp(profileRow) {
+        return normalizeXp(profileRow?.xp_total);
+      }
+
+      function profileLevel(profileRow) {
+        const xp = profileXp(profileRow);
+        const level = Number(profileRow?.level);
+        const derived = levelFromXp(xp);
+        if (!Number.isFinite(level)) return derived;
+        return Math.max(1, Math.floor(level), derived);
+      }
+
+      function xpProgressFromTotal(xpTotal) {
+        const xp = normalizeXp(xpTotal);
+        const level = levelFromXp(xp);
+        const levelStart = (level - 1) * XP_PER_LEVEL;
+        const intoLevel = xp - levelStart;
+        const toNextLevel = XP_PER_LEVEL - intoLevel;
+        const pct = Math.round((intoLevel / XP_PER_LEVEL) * 100);
+        return {
+          level,
+          xp,
+          intoLevel,
+          toNextLevel,
+          progressPct: Math.max(0, Math.min(100, pct)),
+          nextLevel: level + 1,
+        };
+      }
+
+      function renderXpOverview() {
+        const xpData = xpProgressFromTotal(profileXp(profile));
+        xpLevelPill.textContent = `Level ${xpData.level}`;
+        xpTotalText.textContent = `${xpData.xp} XP`;
+        xpProgressBar.style.width = `${xpData.progressPct}%`;
+        xpNextLevelText.textContent = `${xpData.toNextLevel} XP to level ${xpData.nextLevel}`;
+      }
+
       function sortHabits(input) {
         return [...input].sort((a, b) => {
           const rank = { active: 0, paused: 1, stopped: 2 };
@@ -1758,9 +1896,17 @@
             setStatus(profileStatus, insertError.message);
             return;
           }
-          profile = inserted;
+          profile = {
+            ...inserted,
+            xp_total: profileXp(inserted),
+            level: profileLevel(inserted),
+          };
         } else {
-          profile = data;
+          profile = {
+            ...data,
+            xp_total: profileXp(data),
+            level: profileLevel(data),
+          };
         }
 
         profileHandleInput.value = profile.handle || "";
@@ -1809,12 +1955,20 @@
           const requesterIds = [...new Set((reqRows || []).map((r) => r.requester_id))];
           let requesterProfiles = [];
           if (requesterIds.length) {
-            const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", requesterIds);
+            const { data: p } = await supabase.from("profiles").select("user_id, handle, xp_total, level").in("user_id", requesterIds);
             requesterProfiles = p || [];
           }
           requests = (reqRows || []).map((r) => ({
             ...r,
-            requester_profile: requesterProfiles.find((p) => p.user_id === r.requester_id) || null,
+            requester_profile: (() => {
+              const requester = requesterProfiles.find((p) => p.user_id === r.requester_id);
+              if (!requester) return null;
+              return {
+                ...requester,
+                xp_total: profileXp(requester),
+                level: profileLevel(requester),
+              };
+            })(),
           }));
         }
 
@@ -1831,11 +1985,19 @@
           const friendIds = [...new Set((friendRows || []).map((r) => (r.requester_id === currentUser.id ? r.addressee_id : r.requester_id)))];
           let friendProfiles = [];
           if (friendIds.length) {
-            const { data: p } = await supabase.from("profiles").select("user_id, handle").in("user_id", friendIds);
+            const { data: p } = await supabase.from("profiles").select("user_id, handle, xp_total, level").in("user_id", friendIds);
             friendProfiles = p || [];
           }
           friends = friendIds
-            .map((id) => friendProfiles.find((p) => p.user_id === id))
+            .map((id) => {
+              const friendProfile = friendProfiles.find((p) => p.user_id === id);
+              if (!friendProfile) return null;
+              return {
+                ...friendProfile,
+                xp_total: profileXp(friendProfile),
+                level: profileLevel(friendProfile),
+              };
+            })
             .filter(Boolean)
             .sort((a, b) => (a.handle || "").localeCompare(b.handle || ""));
         }
@@ -1892,8 +2054,14 @@
       }
 
       function markDirtyByTable(table) {
-        if (table === "habits" || table === "habit_entries") {
+        if (table === "habits") {
           habitsDirty = true;
+          return;
+        }
+        if (table === "habit_entries") {
+          habitsDirty = true;
+          profileDirty = true;
+          socialDirty = true;
           return;
         }
         if (table === "friendships" || table === "blocked_users") {
@@ -1955,6 +2123,8 @@
             profileDirty = false;
           }
 
+          renderXpOverview();
+
           if (includeHabits) {
             await loadHabitsAndEntries();
             habitsLoaded = true;
@@ -1973,6 +2143,7 @@
             socialDirty = false;
 
             renderRequests();
+            renderLeaderboard();
             renderFriends();
             renderBlockedUsersSettings();
 
@@ -2387,7 +2558,55 @@
         requestList.innerHTML = requests
           .map((r) => {
             const handle = r.requester_profile?.handle ? `@${r.requester_profile.handle}` : "@unknown";
-            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="accept-request" data-request-id="${r.id}">Accept</button><button class="btn btn-danger btn-small" data-action="deny-request" data-request-id="${r.id}">Deny</button></div></div></li>`;
+            const level = profileLevel(r.requester_profile);
+            const xp = profileXp(r.requester_profile);
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong><div class="friend-meta">Level ${level} · ${xp} XP</div></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="accept-request" data-request-id="${r.id}">Accept</button><button class="btn btn-danger btn-small" data-action="deny-request" data-request-id="${r.id}">Deny</button></div></div></li>`;
+          })
+          .join("");
+      }
+
+      function renderLeaderboard() {
+        const selfHandle = profile?.handle ? `@${profile.handle}` : "@you";
+        const rows = [];
+        if (currentUser) {
+          rows.push({
+            user_id: currentUser.id,
+            handle: selfHandle,
+            xp_total: profileXp(profile),
+            level: profileLevel(profile),
+            is_self: true,
+          });
+        }
+
+        for (const friend of friends) {
+          rows.push({
+            user_id: friend.user_id,
+            handle: friend.handle ? `@${friend.handle}` : "@unknown",
+            xp_total: profileXp(friend),
+            level: profileLevel(friend),
+            is_self: false,
+          });
+        }
+
+        const deduped = Array.from(
+          new Map(rows.map((row) => [row.user_id, row])).values(),
+        );
+
+        deduped.sort((a, b) => {
+          if (b.xp_total !== a.xp_total) return b.xp_total - a.xp_total;
+          if (b.level !== a.level) return b.level - a.level;
+          return (a.handle || "").localeCompare(b.handle || "");
+        });
+
+        if (!deduped.length) {
+          leaderboardList.innerHTML = `<li class="empty">No leaderboard data yet.</li>`;
+          return;
+        }
+
+        leaderboardList.innerHTML = deduped
+          .map((row, idx) => {
+            const label = row.is_self ? `${row.handle} (You)` : row.handle;
+            return `<li class="list-item"><div class="friend-row"><div class="leaderboard-left"><div class="leaderboard-rank">#${idx + 1}</div><div><strong>${escapeHtml(label)}</strong><div class="friend-meta">Level ${row.level}</div></div></div><div class="leaderboard-score">${row.xp_total} XP</div></div></li>`;
           })
           .join("");
       }
@@ -2401,7 +2620,9 @@
         friendsList.innerHTML = friends
           .map((f) => {
             const handle = f.handle ? `@${f.handle}` : "@unknown";
-            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View</button><button class="btn btn-ghost btn-small" data-action="toggle-block-friend" data-friend-id="${f.user_id}">${f.is_blocked ? "Unblock" : "Block"}</button><button class="btn btn-danger btn-small" data-action="remove-friend" data-friend-id="${f.user_id}">Unfriend</button></div></div></li>`;
+            const level = profileLevel(f);
+            const xp = profileXp(f);
+            return `<li class="list-item"><div class="friend-row"><div><strong>${escapeHtml(handle)}</strong><div class="friend-meta">Level ${level} · ${xp} XP</div></div><div class="friend-actions"><button class="btn btn-ghost btn-small" data-action="view-friend" data-friend-id="${f.user_id}">View</button><button class="btn btn-ghost btn-small" data-action="toggle-block-friend" data-friend-id="${f.user_id}">${f.is_blocked ? "Unblock" : "Block"}</button><button class="btn btn-danger btn-small" data-action="remove-friend" data-friend-id="${f.user_id}">Unfriend</button></div></div></li>`;
           })
           .join("");
       }
@@ -2438,7 +2659,9 @@
 
         const friend = friends.find((f) => f.user_id === selectedFriendId);
         const friendHandle = friend?.handle ? `@${friend.handle}` : "@unknown";
-        friendAnalyticsIndicator.textContent = friendHandle;
+        const friendLevel = profileLevel(friend);
+        const friendXp = profileXp(friend);
+        friendAnalyticsIndicator.textContent = `${friendHandle} · Level ${friendLevel} · ${friendXp} XP`;
 
         if (!selectedFriendId || !selectedFriendHabits.length) {
           renderSummaryInto(friendSummaryGrid, {
@@ -2699,6 +2922,9 @@
 
       async function toggleDay(habitId, dayISO) {
         await withLoading(async () => {
+          const beforeXp = profileXp(profile);
+          const beforeLevel = profileLevel(profile);
+
           const habit = habits.find((h) => h.id === habitId);
           if (habit && habitStatus(habit) === "stopped") {
             showToast("Restart this habit before checking it off.", "error");
@@ -2718,7 +2944,12 @@
               showToast(error.message, "error");
               return;
             }
+            profileDirty = true;
+            socialDirty = true;
             await syncFromServer();
+            const gained = profileXp(profile) - beforeXp;
+            if (gained > 0) showToast(`+${gained} XP`, "success");
+            if (profileLevel(profile) > beforeLevel) showToast(`Level up! You reached level ${profileLevel(profile)}.`, "success");
             return;
           }
 
@@ -2737,7 +2968,13 @@
             }
           }
 
+          profileDirty = true;
+          socialDirty = true;
           await syncFromServer();
+          const xpDelta = profileXp(profile) - beforeXp;
+          if (xpDelta > 0) showToast(`+${xpDelta} XP`, "success");
+          if (xpDelta < 0) showToast(`${Math.abs(xpDelta)} XP removed`, "info");
+          if (profileLevel(profile) > beforeLevel) showToast(`Level up! You reached level ${profileLevel(profile)}.`, "success");
         });
       }
 
