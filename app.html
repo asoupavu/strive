@@ -1999,18 +1999,24 @@
               })
               .join("");
 
-            const noteDay = selectedNoteDayByHabit.get(habit.id) || days.find((d) => formatDate(d) <= today)?.toISOString().slice(0, 10) || today;
-            const noteEntry = getEntry(habit.id, noteDay);
+            const previousDays = days.filter((d) => formatDate(d) < today);
+            const previousDayIsos = previousDays.map((d) => formatDate(d));
+            const savedNoteDay = selectedNoteDayByHabit.get(habit.id);
+            const noteDay = previousDayIsos.includes(savedNoteDay) ? savedNoteDay : previousDayIsos[previousDayIsos.length - 1] || "";
+            const noteEntry = noteDay ? getEntry(habit.id, noteDay) : null;
             const noteText = noteEntry?.note || "";
+            const noteInputsDisabled = status === "stopped" || previousDays.length === 0;
+            const notePlaceholder = previousDays.length ? "Note for selected day" : "No previous day available yet";
 
-            const daySelectOptions = days
-              .filter((d) => formatDate(d) <= today)
+            const daySelectOptions = previousDays.length
+              ? previousDays
               .map((d) => {
                 const iso = formatDate(d);
                 const label = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
                 return `<option value="${iso}" ${iso === noteDay ? "selected" : ""}>${label}</option>`;
               })
-              .join("");
+              .join("")
+              : `<option value="">No previous days</option>`;
 
             return `
               <article class="habit-card">
@@ -2050,9 +2056,9 @@
                 <div class="week-grid">${dayBtns}</div>
 
                 <div class="note-row">
-                  <select data-action="note-day" data-habit-id="${habit.id}" ${status === "stopped" ? "disabled" : ""}>${daySelectOptions}</select>
-                  <input data-action="note-input" data-habit-id="${habit.id}" value="${escapeHtml(noteText)}" placeholder="Note for selected day" maxlength="200" ${status === "stopped" ? "disabled" : ""} />
-                  <button class="btn btn-ghost btn-small" data-action="save-note" data-habit-id="${habit.id}" ${status === "stopped" ? "disabled" : ""}>Save note</button>
+                  <select data-action="note-day" data-habit-id="${habit.id}" ${noteInputsDisabled ? "disabled" : ""}>${daySelectOptions}</select>
+                  <input data-action="note-input" data-habit-id="${habit.id}" value="${escapeHtml(noteText)}" placeholder="${notePlaceholder}" maxlength="200" ${noteInputsDisabled ? "disabled" : ""} />
+                  <button class="btn btn-ghost btn-small" data-action="save-note" data-habit-id="${habit.id}" ${noteInputsDisabled ? "disabled" : ""}>Save note</button>
                 </div>
               </article>
             `;
@@ -2672,6 +2678,7 @@
         if (!daySelect || !noteInput) return;
 
         const dayISO = daySelect.value;
+        if (!dayISO) return;
         const note = noteInput.value.trim();
         selectedNoteDayByHabit.set(habitId, dayISO);
 
@@ -3082,6 +3089,11 @@
           const select = event.target.closest("select[data-action='note-day']");
           if (!select) return;
           const habitId = select.dataset.habitId;
+          if (!select.value) {
+            selectedNoteDayByHabit.delete(habitId);
+            renderHabits();
+            return;
+          }
           selectedNoteDayByHabit.set(habitId, select.value);
           renderHabits();
         });
