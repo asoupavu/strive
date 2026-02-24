@@ -3122,6 +3122,7 @@
 
         await syncFromServer({ includeHabits: true, includeSocial: true, showLoading: true });
         viewWeekStart = startOfWeek(new Date());
+        renderHabits();
         resetHabitForm();
         updateCustomDaysVisibility();
         if (switchTab) await switchTab(userSettings.defaultStartTab || "habits");
