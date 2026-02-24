@@ -1294,6 +1294,7 @@
       let editingHabitId = null;
       let isHabitFormCollapsed = false;
       let selectedNoteDayByHabit = new Map();
+      let noteSelectionDayAnchor = null;
 
       let requests = [];
       let friends = [];
@@ -2026,6 +2027,10 @@
 
         const days = weekDates(viewWeekStart);
         const today = todayISO();
+        if (noteSelectionDayAnchor !== today) {
+          selectedNoteDayByHabit.clear();
+          noteSelectionDayAnchor = today;
+        }
 
         habitList.innerHTML = visibleHabits
           .map((habit) => {
@@ -2063,24 +2068,24 @@
               })
               .join("");
 
-            const previousDays = days.filter((d) => formatDate(d) < today);
-            const previousDayIsos = previousDays.map((d) => formatDate(d));
+            const selectableDays = days.filter((d) => formatDate(d) <= today);
+            const selectableDayIsos = selectableDays.map((d) => formatDate(d));
             const savedNoteDay = selectedNoteDayByHabit.get(habit.id);
-            const noteDay = previousDayIsos.includes(savedNoteDay) ? savedNoteDay : previousDayIsos[previousDayIsos.length - 1] || "";
+            const noteDay = selectableDayIsos.includes(savedNoteDay) ? savedNoteDay : selectableDayIsos[selectableDayIsos.length - 1] || "";
             const noteEntry = noteDay ? getEntry(habit.id, noteDay) : null;
             const noteText = noteEntry?.note || "";
-            const noteInputsDisabled = status === "stopped" || previousDays.length === 0;
-            const notePlaceholder = previousDays.length ? "Note for selected day" : "No previous day available yet";
+            const noteInputsDisabled = status === "stopped" || selectableDays.length === 0;
+            const notePlaceholder = selectableDays.length ? "Note for selected day" : "No day available yet";
 
-            const daySelectOptions = previousDays.length
-              ? previousDays
+            const daySelectOptions = selectableDays.length
+              ? selectableDays
               .map((d) => {
                 const iso = formatDate(d);
                 const label = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
                 return `<option value="${iso}" ${iso === noteDay ? "selected" : ""}>${label}</option>`;
               })
               .join("")
-              : `<option value="">No previous days</option>`;
+              : `<option value="">No days</option>`;
 
             return `
               <article class="habit-card">
