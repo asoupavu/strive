@@ -89,6 +89,24 @@
     </style>
   </head>
   <body>
+    <script>
+      (function redirectRecoveryToResetPage() {
+        const hash = window.location.hash || "";
+        const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+        const queryParams = new URLSearchParams(window.location.search || "");
+
+        const isRecovery =
+          hashParams.get("type") === "recovery" ||
+          queryParams.get("type") === "recovery" ||
+          (!!hashParams.get("access_token") && !!hashParams.get("refresh_token"));
+
+        if (!isRecovery) return;
+
+        const target = `/reset-password.html${window.location.search || ""}${window.location.hash || ""}`;
+        window.location.replace(target);
+      })();
+    </script>
+
     <main>
       <div class="brand">
         <img src="/strive.png" alt="STRIVE" />
