@@ -91,7 +91,6 @@
 
       .loading {
         opacity: 0.7;
-        pointer-events: none;
       }
 
       .btn {
@@ -1087,6 +1086,11 @@
       let isSyncing = false;
       let syncQueued = false;
       let loadingCounter = 0;
+      let habitsLoaded = false;
+      let socialLoaded = false;
+      let habitsDirty = true;
+      let socialDirty = true;
+      let profileDirty = true;
 
       function formatDate(date) {
         const d = new Date(date);
@@ -1555,42 +1559,100 @@
         renderFriendHabits();
       }
 
-      function scheduleSync() {
+      function markDirtyByTable(table) {
+        if (table === "habits" || table === "habit_entries") {
+          habitsDirty = true;
+          return;
+        }
+        if (table === "friendships" || table === "blocked_users") {
+          socialDirty = true;
+          return;
+        }
+        if (table === "profiles") {
+          profileDirty = true;
+          socialDirty = true;
+          return;
+        }
+      }
+
+      function needsHabitsSync() {
+        return !habitsLoaded || habitsDirty;
+      }
+
+      function needsSocialSync() {
+        return !socialLoaded || socialDirty;
+      }
+
+      function scheduleSync(changedTable) {
+        if (changedTable) markDirtyByTable(changedTable);
         if (syncTimer) return;
         syncTimer = setTimeout(async () => {
           syncTimer = null;
-          await syncFromServer();
+          const includeHabits = (currentTab === "habits" || currentTab === "analytics") && needsHabitsSync();
+          const includeSocial = (currentTab === "social" || currentTab === "settings") && needsSocialSync();
+          if (!includeHabits && !includeSocial && !profileDirty) return;
+          await syncFromServer({ includeHabits, includeSocial, showLoading: false });
         }, 250);
       }
 
-      async function syncFromServer() {
+      async function syncFromServer(options = {}) {
+        const includeHabits =
+          typeof options.includeHabits === "boolean"
+            ? options.includeHabits
+            : currentTab === "habits" || currentTab === "analytics"
+              ? true
+              : needsHabitsSync();
+        const includeSocial =
+          typeof options.includeSocial === "boolean"
+            ? options.includeSocial
+            : currentTab === "social" || currentTab === "settings"
+              ? true
+              : needsSocialSync();
+        const showLoading = typeof options.showLoading === "boolean" ? options.showLoading : false;
+
         if (isSyncing) {
           syncQueued = true;
           return;
         }
 
         isSyncing = true;
-        setLoading(true);
+        if (showLoading) setLoading(true);
         try {
-          await ensureProfile();
-          await loadHabitsAndEntries();
-          await loadSocialData();
+          if (!profile || profileDirty) {
+            await ensureProfile();
+            profileDirty = false;
+          }
 
-          refreshCategoryFilterOptions();
-          renderHabits();
-          renderAnalytics();
-          renderRequests();
-          renderFriends();
-          renderBlockedUsersSettings();
+          if (includeHabits) {
+            await loadHabitsAndEntries();
+            habitsLoaded = true;
+            habitsDirty = false;
 
-          if (selectedFriendId) {
-            await loadFriendHabits(selectedFriendId);
+            refreshCategoryFilterOptions();
+            renderHabits();
+            if (currentTab === "analytics") renderAnalytics();
+          } else if (currentTab === "analytics") {
+            renderAnalytics();
+          }
+
+          if (includeSocial) {
+            await loadSocialData();
+            socialLoaded = true;
+            socialDirty = false;
+
+            renderRequests();
+            renderFriends();
+            renderBlockedUsersSettings();
+
+            if (selectedFriendId) {
+              await loadFriendHabits(selectedFriendId);
+            }
           }
         } catch (error) {
           const msg = error instanceof Error ? error.message : "Sync failed";
           showToast(msg, "error");
         } finally {
-          setLoading(false);
+          if (showLoading) setLoading(false);
           isSyncing = false;
           if (syncQueued) {
             syncQueued = false;
@@ -1615,7 +1677,7 @@
         for (const table of tables) {
           const channel = supabase
             .channel(`rt-${table}-${currentUser.id}`)
-            .on("postgres_changes", { event: "*", schema: "public", table }, scheduleSync)
+            .on("postgres_changes", { event: "*", schema: "public", table }, () => scheduleSync(table))
             .subscribe();
           channels.push(channel);
         }
@@ -2613,7 +2675,7 @@
         const viewSocial = document.getElementById("view-social");
         const viewSettings = document.getElementById("view-settings");
 
-        function show(target) {
+        async function show(target) {
           currentTab = target;
           tabHabits.classList.toggle("active", target === "habits");
           tabAnalytics.classList.toggle("active", target === "analytics");
@@ -2625,16 +2687,26 @@
           viewSocial.style.display = target === "social" ? "block" : "none";
           viewSettings.style.display = target === "settings" ? "block" : "none";
 
+          if (target === "analytics" && needsHabitsSync()) {
+            await syncFromServer({ includeHabits: true, includeSocial: false, showLoading: false });
+          }
+          if (target === "social" && needsSocialSync()) {
+            await syncFromServer({ includeHabits: false, includeSocial: true, showLoading: false });
+          }
+          if (target === "settings" && needsSocialSync()) {
+            await syncFromServer({ includeHabits: false, includeSocial: true, showLoading: false });
+          }
+
           if (target === "analytics") {
             analyticsRange.value = userSettings.defaultAnalyticsRange;
             renderAnalytics();
           }
         }
 
-        tabHabits.addEventListener("click", () => show("habits"));
-        tabAnalytics.addEventListener("click", () => show("analytics"));
-        tabSocial.addEventListener("click", () => show("social"));
-        tabSettings.addEventListener("click", () => show("settings"));
+        tabHabits.addEventListener("click", () => void show("habits"));
+        tabAnalytics.addEventListener("click", () => void show("analytics"));
+        tabSocial.addEventListener("click", () => void show("social"));
+        tabSettings.addEventListener("click", () => void show("settings"));
         switchTab = show;
       }
 
@@ -2645,7 +2717,9 @@
           window.location.href = "/login.html";
         });
 
-        document.getElementById("refresh-btn").addEventListener("click", syncFromServer);
+        document.getElementById("refresh-btn").addEventListener("click", () =>
+          syncFromServer({ includeHabits: true, includeSocial: true, showLoading: true }),
+        );
         document.getElementById("prev-week").addEventListener("click", () => {
           viewWeekStart = addDays(viewWeekStart, -7);
           renderHabits();
@@ -2835,11 +2909,11 @@
         setupRealtime();
         window.addEventListener("beforeunload", teardownRealtime);
 
-        await syncFromServer();
+        await syncFromServer({ includeHabits: true, includeSocial: true, showLoading: true });
         viewWeekStart = startOfWeek(new Date());
         resetHabitForm();
         updateCustomDaysVisibility();
-        if (switchTab) switchTab(userSettings.defaultStartTab || "habits");
+        if (switchTab) await switchTab(userSettings.defaultStartTab || "habits");
       }
 
       init();
