@@ -571,6 +571,69 @@
         background: #fff;
       }
 
+      .theme-row {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+      }
+
+      .theme-select-wrap {
+        width: min(360px, 100%);
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .theme-swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.32rem;
+      }
+
+      .theme-swatch {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.25rem;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .theme-swatch:hover {
+        border-color: #d8b58f;
+      }
+
+      .theme-swatch.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+      }
+
+      .theme-swatch:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .theme-palette {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 2px;
+        margin-bottom: 0.15rem;
+      }
+
+      .theme-chip {
+        display: block;
+        height: 12px;
+        border-radius: 3px;
+      }
+
+      .theme-name {
+        display: block;
+        font-size: 0.64rem;
+        color: var(--muted);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       .setting-title {
         margin: 0;
         font-size: 0.84rem;
@@ -705,6 +768,10 @@
 
         .analytics-grid {
           grid-template-columns: 1fr;
+        }
+
+        .theme-swatch-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
     </style>
@@ -952,19 +1019,15 @@
           <div class="card">
             <h2 class="section-title">Appearance</h2>
             <div class="settings-list">
-              <div class="setting-row">
+              <div class="setting-row theme-row">
                 <div>
-                  <p class="setting-title">Accent color</p>
-                  <p class="setting-sub">Primary UI highlight color.</p>
+                  <p class="setting-title">Theme</p>
+                  <p class="setting-sub">Choose a color profile using preview swatches.</p>
                 </div>
-                <select id="setting-accent" style="width: 150px">
-                  <option value="#c24d2c">Sunset Orange</option>
-                  <option value="#0f766e">Teal</option>
-                  <option value="#2563eb">Blue</option>
-                  <option value="#be185d">Rose</option>
-                  <option value="#4f46e5">Indigo</option>
-                  <option value="#15803d">Green</option>
-                </select>
+                <div class="theme-select-wrap">
+                  <select id="setting-accent" aria-label="Theme color"></select>
+                  <div id="setting-theme-preview" class="theme-swatch-grid" role="group" aria-label="Theme previews"></div>
+                </div>
               </div>
 
               <div class="setting-row">
@@ -1121,6 +1184,7 @@
       const toastWrap = document.getElementById("toast-wrap");
 
       const settingAccent = document.getElementById("setting-accent");
+      const settingThemePreview = document.getElementById("setting-theme-preview");
       const settingDensity = document.getElementById("setting-density");
       const settingShowDescriptions = document.getElementById("setting-show-descriptions");
       const settingShowProgress = document.getElementById("setting-show-progress");
@@ -1155,6 +1219,21 @@
         "sleep",
         "focus",
         "wellness",
+      ];
+
+      const THEME_OPTIONS = [
+        { name: "Sunset Orange", accent: "#c24d2c" },
+        { name: "Teal Current", accent: "#0f766e" },
+        { name: "Ocean Blue", accent: "#2563eb" },
+        { name: "Rose Clay", accent: "#be185d" },
+        { name: "Forest", accent: "#15803d" },
+        { name: "Amber", accent: "#b45309" },
+        { name: "Coral", accent: "#ea580c" },
+        { name: "Mint", accent: "#059669" },
+        { name: "Sky", accent: "#0284c7" },
+        { name: "Brick", accent: "#b42318" },
+        { name: "Slate", accent: "#334155" },
+        { name: "Cranberry", accent: "#9f1239" },
       ];
 
       const DEFAULT_SETTINGS = {
@@ -1282,6 +1361,7 @@
         const tags = document.getElementById("habit-tags");
         tags.innerHTML = TAG_OPTIONS.map((t) => `<label class="tag-check"><input type="checkbox" value="${escapeHtml(t)}" /><span>${escapeHtml(t)}</span></label>`).join("");
         applyTagValues([]);
+        renderThemeOptions();
       }
 
       function setStatus(el, msg) {
@@ -1401,9 +1481,59 @@
         return `rgb(${mix(r)} ${mix(g)} ${mix(b)})`;
       }
 
+      function accentDeepFromHex(hex) {
+        const clean = String(hex || "").replace("#", "");
+        if (clean.length !== 6) return "#8f2e17";
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        const shade = (v) => Math.round(v * 0.62);
+        return `rgb(${shade(r)} ${shade(g)} ${shade(b)})`;
+      }
+
+      function ensureAccentOptionExists(accent) {
+        if (!accent) return;
+        const hasOption = Array.from(settingAccent.options).some((opt) => opt.value === accent);
+        if (hasOption) return;
+        const customOption = document.createElement("option");
+        customOption.value = accent;
+        customOption.textContent = `Custom (${accent})`;
+        settingAccent.appendChild(customOption);
+      }
+
+      function syncThemePreviewSelection() {
+        Array.from(settingThemePreview.querySelectorAll(".theme-swatch")).forEach((btn) => {
+          const active = btn.dataset.accent === userSettings.accentColor;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-pressed", String(active));
+        });
+      }
+
+      function renderThemeOptions() {
+        settingAccent.innerHTML = THEME_OPTIONS.map((theme) => `<option value="${theme.accent}">${escapeHtml(theme.name)}</option>`).join("");
+        ensureAccentOptionExists(userSettings.accentColor);
+        settingAccent.value = userSettings.accentColor;
+
+        settingThemePreview.innerHTML = THEME_OPTIONS.map((theme) => {
+          const soft = accentSoftFromHex(theme.accent);
+          const deep = accentDeepFromHex(theme.accent);
+          return `<button type="button" class="theme-swatch" data-accent="${theme.accent}" aria-label="Select ${escapeHtml(theme.name)}">
+            <span class="theme-palette">
+              <span class="theme-chip" style="background:${soft}"></span>
+              <span class="theme-chip" style="background:${theme.accent}"></span>
+              <span class="theme-chip" style="background:${deep}"></span>
+            </span>
+            <span class="theme-name">${escapeHtml(theme.name)}</span>
+          </button>`;
+        }).join("");
+
+        syncThemePreviewSelection();
+      }
+
       function applySettingsToUi() {
         document.documentElement.style.setProperty("--accent", userSettings.accentColor);
         document.documentElement.style.setProperty("--accent-soft", accentSoftFromHex(userSettings.accentColor));
+        syncThemePreviewSelection();
 
         document.body.dataset.density = userSettings.density;
         document.body.classList.toggle("hide-descriptions", !userSettings.showDescriptions);
@@ -1415,6 +1545,7 @@
 
       function hydrateSettingsControls() {
         settingsHydrating = true;
+        ensureAccentOptionExists(userSettings.accentColor);
         settingAccent.value = userSettings.accentColor;
         settingDensity.value = userSettings.density;
         settingShowDescriptions.checked = userSettings.showDescriptions;
@@ -1424,6 +1555,7 @@
         settingStartTab.value = userSettings.defaultStartTab;
         settingSyncHint.checked = userSettings.showSyncHint;
         settingCollapseHabitPanel.checked = userSettings.collapseHabitPanel;
+        syncThemePreviewSelection();
         settingsHydrating = false;
       }
 
@@ -3031,6 +3163,14 @@
 
         settingAccent.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("accentColor", settingAccent.value);
+        });
+        settingThemePreview.addEventListener("click", (event) => {
+          const swatch = event.target.closest(".theme-swatch");
+          if (!swatch) return;
+          const accent = swatch.dataset.accent;
+          if (!accent) return;
+          settingAccent.value = accent;
+          if (!settingsHydrating) updateSetting("accentColor", accent);
         });
         settingDensity.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("density", settingDensity.value);
