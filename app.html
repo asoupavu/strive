@@ -1043,6 +1043,14 @@
 
               <div class="setting-row">
                 <div>
+                  <p class="setting-title">Set reminder by email</p>
+                  <p class="setting-sub">Send a casual reminder at 7:00 AM local time each morning.</p>
+                </div>
+                <input id="setting-email-reminders" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+
+              <div class="setting-row">
+                <div>
                   <p class="setting-title">Collapse add habit panel</p>
                   <p class="setting-sub">Save more room for habits by collapsing the left panel.</p>
                 </div>
@@ -1128,6 +1136,7 @@
       const settingDefaultRange = document.getElementById("setting-default-range");
       const settingStartTab = document.getElementById("setting-start-tab");
       const settingSyncHint = document.getElementById("setting-sync-hint");
+      const settingEmailReminders = document.getElementById("setting-email-reminders");
       const settingCollapseHabitPanel = document.getElementById("setting-collapse-habit-panel");
       const settingToggleBlocked = document.getElementById("setting-toggle-blocked");
       const settingsBlockedWrap = document.getElementById("settings-blocked-wrap");
@@ -1166,6 +1175,8 @@
         defaultAnalyticsRange: "30",
         defaultStartTab: "habits",
         showSyncHint: true,
+        emailRemindersEnabled: false,
+        reminderTimezone: "UTC",
         collapseHabitPanel: false,
       };
 
@@ -1372,6 +1383,10 @@
         return (email || "user").split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";
       }
 
+      function currentBrowserTimezone() {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      }
+
       function normalizeSettings(raw) {
         const s = raw && typeof raw === "object" ? raw : {};
         return {
@@ -1387,6 +1402,10 @@
             ? s.defaultStartTab
             : DEFAULT_SETTINGS.defaultStartTab,
           showSyncHint: typeof s.showSyncHint === "boolean" ? s.showSyncHint : DEFAULT_SETTINGS.showSyncHint,
+          emailRemindersEnabled:
+            typeof s.emailRemindersEnabled === "boolean" ? s.emailRemindersEnabled : DEFAULT_SETTINGS.emailRemindersEnabled,
+          reminderTimezone:
+            typeof s.reminderTimezone === "string" && s.reminderTimezone.trim() ? s.reminderTimezone : currentBrowserTimezone(),
           collapseHabitPanel: typeof s.collapseHabitPanel === "boolean" ? s.collapseHabitPanel : DEFAULT_SETTINGS.collapseHabitPanel,
         };
       }
@@ -1423,6 +1442,7 @@
         settingDefaultRange.value = userSettings.defaultAnalyticsRange;
         settingStartTab.value = userSettings.defaultStartTab;
         settingSyncHint.checked = userSettings.showSyncHint;
+        settingEmailReminders.checked = !!userSettings.emailRemindersEnabled;
         settingCollapseHabitPanel.checked = userSettings.collapseHabitPanel;
         settingsHydrating = false;
       }
@@ -3052,6 +3072,14 @@
         });
         settingSyncHint.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("showSyncHint", settingSyncHint.checked);
+        });
+        settingEmailReminders.addEventListener("change", () => {
+          if (settingsHydrating) return;
+          const nextEnabled = settingEmailReminders.checked;
+          updateSetting("emailRemindersEnabled", nextEnabled);
+          if (nextEnabled) {
+            updateSetting("reminderTimezone", currentBrowserTimezone());
+          }
         });
         settingCollapseHabitPanel.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("collapseHabitPanel", settingCollapseHabitPanel.checked);

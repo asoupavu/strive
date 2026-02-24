@@ -9,6 +9,7 @@ Apply files in lexical order:
 3. `20260223_000003_policy_hardening.sql`
 4. `20260223_000004_habit_timeline_lifecycle.sql`
 5. `20260223_000005_target_count_max7.sql`
+6. `20260224_000006_email_reminders.sql`
 
 ## Notes
 - Migrations are idempotent and safe to re-run.
