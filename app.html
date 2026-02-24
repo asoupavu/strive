@@ -829,23 +829,59 @@
           </aside>
 
           <main class="card">
-            <h2 class="section-title">Friends</h2>
-            <ul id="friends-list" class="list" style="margin-bottom: 0.7rem"></ul>
-
-            <h2 class="section-title">Friend Habits</h2>
-            <div id="friend-habits" class="empty">Select a friend to view shared habits.</div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 0.9rem">
-              <h2 class="section-title" style="margin: 0">Friend Analytics</h2>
-              <select id="friend-analytics-range" style="max-width: 160px">
-                <option value="7">Last 7 days</option>
-                <option value="30" selected>Last 30 days</option>
-                <option value="90">Last 90 days</option>
-                <option value="all">All time</option>
-              </select>
+            <div id="social-main-default">
+              <h2 class="section-title">Friends</h2>
+              <ul id="friends-list" class="list" style="margin-bottom: 0.7rem"></ul>
             </div>
-            <div id="friend-analytics-summary" class="helper">Select a friend to view analytics.</div>
-            <canvas id="friend-analytics-chart" height="140" style="margin-top: 0.4rem"></canvas>
+
+            <div id="social-friend-analytics-view" style="display: none">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem">
+                <div>
+                  <h2 class="section-title" style="margin: 0">Viewing Friends Analytics</h2>
+                  <div id="friend-analytics-indicator" class="helper">@unknown</div>
+                </div>
+                <button id="friend-analytics-back" class="btn btn-ghost">Back</button>
+              </div>
+
+              <div class="card" style="margin-bottom: 0.62rem">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem">
+                  <h2 class="section-title" style="margin: 0">Insights</h2>
+                  <select id="friend-analytics-range" style="max-width: 170px">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="all">All time</option>
+                  </select>
+                </div>
+                <div id="friend-summary-grid" class="summary-grid"></div>
+              </div>
+
+              <div class="analytics-grid">
+                <div class="card">
+                  <h3 class="section-title">Completion Rate by Habit</h3>
+                  <canvas id="friend-habit-rate-chart" height="150"></canvas>
+                </div>
+                <div class="card">
+                  <h3 class="section-title">Daily Completion Trend</h3>
+                  <canvas id="friend-daily-trend-chart" height="150"></canvas>
+                </div>
+                <div class="card">
+                  <h3 class="section-title">Rolling 7 vs 30 day Trend</h3>
+                  <canvas id="friend-rolling-chart" height="140"></canvas>
+                </div>
+                <div class="card">
+                  <h3 class="section-title">Current Streaks</h3>
+                  <canvas id="friend-streak-chart" height="140"></canvas>
+                </div>
+                <div class="card" style="grid-column: 1 / -1">
+                  <div class="heatmap-head">
+                    <h3 class="section-title" style="margin: 0">Monthly Heatmap</h3>
+                    <input id="friend-heatmap-month" type="month" style="max-width: 170px" />
+                  </div>
+                  <div class="heatmap" id="friend-heatmap-grid"></div>
+                </div>
+              </div>
+            </div>
           </main>
         </div>
       </section>
@@ -1000,10 +1036,14 @@
       const friendStatus = document.getElementById("friend-status");
       const requestList = document.getElementById("request-list");
       const friendsList = document.getElementById("friends-list");
-      const friendHabits = document.getElementById("friend-habits");
+      const socialMainDefault = document.getElementById("social-main-default");
+      const socialFriendAnalyticsView = document.getElementById("social-friend-analytics-view");
+      const friendAnalyticsIndicator = document.getElementById("friend-analytics-indicator");
+      const friendAnalyticsBackBtn = document.getElementById("friend-analytics-back");
       const friendAnalyticsRange = document.getElementById("friend-analytics-range");
-      const friendAnalyticsSummary = document.getElementById("friend-analytics-summary");
-      const friendAnalyticsChartEl = document.getElementById("friend-analytics-chart");
+      const friendSummaryGrid = document.getElementById("friend-summary-grid");
+      const friendHeatmapMonth = document.getElementById("friend-heatmap-month");
+      const friendHeatmapGrid = document.getElementById("friend-heatmap-grid");
       const syncHint = document.getElementById("sync-hint");
       const settingsStatus = document.getElementById("settings-status");
       const toastWrap = document.getElementById("toast-wrap");
@@ -1069,6 +1109,7 @@
       let selectedFriendId = null;
       let selectedFriendHabits = [];
       let selectedFriendEntries = [];
+      let viewingFriendAnalytics = false;
       let userSettings = { ...DEFAULT_SETTINGS };
       let settingsSaveTimer = null;
       let settingsHydrating = false;
@@ -1079,7 +1120,10 @@
       let dailyTrendChart = null;
       let streakChart = null;
       let rollingChart = null;
-      let friendAnalyticsChart = null;
+      let friendHabitRateChart = null;
+      let friendDailyTrendChart = null;
+      let friendStreakChart = null;
+      let friendRollingChart = null;
 
       let channels = [];
       let syncTimer = null;
@@ -1544,19 +1588,19 @@
 
         const { data: h, error: he } = await supabase.from("habits").select("*").eq("user_id", friendId);
         if (he) {
-          friendHabits.innerHTML = `<p class="empty">${escapeHtml(he.message)}</p>`;
+          showToast(he.message, "error");
           return;
         }
 
         const { data: e, error: ee } = await supabase.from("habit_entries").select("*").eq("user_id", friendId);
         if (ee) {
-          friendHabits.innerHTML = `<p class="empty">${escapeHtml(ee.message)}</p>`;
+          showToast(ee.message, "error");
           return;
         }
 
         selectedFriendHabits = sortHabits(h || []);
         selectedFriendEntries = e || [];
-        renderFriendHabits();
+        renderFriendAnalytics();
       }
 
       function markDirtyByTable(table) {
@@ -1793,8 +1837,8 @@
           .join("");
       }
 
-      function renderSummary(metrics) {
-        summaryGrid.innerHTML = `
+      function renderSummaryInto(containerEl, metrics) {
+        containerEl.innerHTML = `
           <div class="metric"><p class="metric-label">Habits</p><p class="metric-value">${metrics.totalHabits}</p></div>
           <div class="metric"><p class="metric-label">Completions</p><p class="metric-value">${metrics.totalCompletions}</p></div>
           <div class="metric"><p class="metric-label">Avg Completion</p><p class="metric-value">${metrics.avgCompletionPct}%</p></div>
@@ -1802,6 +1846,10 @@
           <div class="metric"><p class="metric-label">Best Day</p><p class="metric-value">${metrics.bestDay}</p></div>
           <div class="metric"><p class="metric-label">Worst Day</p><p class="metric-value">${metrics.worstDay}</p></div>
         `;
+      }
+
+      function renderSummary(metrics) {
+        renderSummaryInto(summaryGrid, metrics);
       }
 
       function getRangeDates(range) {
@@ -1822,8 +1870,8 @@
         return out;
       }
 
-      function renderHeatmap() {
-        const monthValue = heatmapMonth.value;
+      function renderHeatmapInto(entriesSource, monthInputEl, gridEl) {
+        const monthValue = monthInputEl.value;
         if (!monthValue) return;
 
         const [yy, mm] = monthValue.split("-").map(Number);
@@ -1832,7 +1880,7 @@
         const startWeekday = (first.getDay() + 6) % 7;
 
         const counts = new Map();
-        for (const e of entries) {
+        for (const e of entriesSource) {
           if (!e.completed) continue;
           const d = dateFromISO(e.entry_date);
           if (d.getFullYear() === yy && d.getMonth() === mm - 1) {
@@ -1852,7 +1900,11 @@
           cells.push(`<div class="heatmap-day intensity-${intensity}" title="${iso}: ${count} completions">${day}</div>`);
         }
 
-        heatmapGrid.innerHTML = cells.join("");
+        gridEl.innerHTML = cells.join("");
+      }
+
+      function renderHeatmap() {
+        renderHeatmapInto(entries, heatmapMonth, heatmapGrid);
       }
 
       function renderAnalytics() {
@@ -2070,50 +2122,36 @@
           .join("");
       }
 
-      function renderFriendHabits() {
-        if (!selectedFriendId) {
-          friendHabits.innerHTML = `<p class="empty">Select a friend to view shared habits.</p>`;
-          renderFriendAnalytics();
-          return;
-        }
-
-        const friend = friends.find((f) => f.user_id === selectedFriendId);
-        const friendHandle = friend?.handle ? `@${friend.handle}` : "@unknown";
-
-        if (!selectedFriendHabits.length) {
-          friendHabits.innerHTML = `<p class="empty">No shared habits available for ${escapeHtml(friendHandle)}.</p>`;
-          renderFriendAnalytics();
-          return;
-        }
-
-        const today = todayISO();
-        const week = weekDates(startOfWeek(new Date()));
-
-        friendHabits.innerHTML = `
-          <p class="helper" style="margin: 0 0 0.5rem">Showing habits shared by ${escapeHtml(friendHandle)}</p>
-          ${selectedFriendHabits
-            .map((h) => {
-              const doneWeek = week.filter((d) => {
-                const iso = formatDate(d);
-                const e = selectedFriendEntries.find((x) => x.habit_id === h.id && x.entry_date === iso && x.completed);
-                return !!e;
-              }).length;
-              const totalDone = selectedFriendEntries.filter((x) => x.habit_id === h.id && x.completed).length;
-              return `<div class="list-item"><strong>${escapeHtml(h.name)}</strong><div class="helper">${escapeHtml(h.category || "No category")} | target ${habitTargetCount(h)}/${habitCadenceDays(h)}d | week ${doneWeek}/7 | total ${totalDone}</div></div>`;
-            })
-            .join("")}
-        `;
-        renderFriendAnalytics();
+      function setSocialMainMode(showFriendAnalytics) {
+        viewingFriendAnalytics = showFriendAnalytics;
+        socialMainDefault.style.display = showFriendAnalytics ? "none" : "block";
+        socialFriendAnalyticsView.style.display = showFriendAnalytics ? "block" : "none";
       }
 
       function renderFriendAnalytics() {
-        if (friendAnalyticsChart) {
-          friendAnalyticsChart.destroy();
-          friendAnalyticsChart = null;
-        }
+        if (friendHabitRateChart) friendHabitRateChart.destroy();
+        if (friendDailyTrendChart) friendDailyTrendChart.destroy();
+        if (friendStreakChart) friendStreakChart.destroy();
+        if (friendRollingChart) friendRollingChart.destroy();
+        friendHabitRateChart = null;
+        friendDailyTrendChart = null;
+        friendStreakChart = null;
+        friendRollingChart = null;
+
+        const friend = friends.find((f) => f.user_id === selectedFriendId);
+        const friendHandle = friend?.handle ? `@${friend.handle}` : "@unknown";
+        friendAnalyticsIndicator.textContent = friendHandle;
 
         if (!selectedFriendId || !selectedFriendHabits.length) {
-          friendAnalyticsSummary.textContent = "Select a friend to view analytics.";
+          renderSummaryInto(friendSummaryGrid, {
+            totalHabits: 0,
+            totalCompletions: 0,
+            avgCompletionPct: 0,
+            consistencyScore: 0,
+            bestDay: "-",
+            worstDay: "-",
+          });
+          friendHeatmapGrid.innerHTML = "";
           return;
         }
 
@@ -2122,35 +2160,36 @@
         const endISO = formatDate(end);
 
         const scopedEntries = selectedFriendEntries.filter((e) => {
-          if (!e.completed) return false;
           if (startISO && e.entry_date < startISO) return false;
           return e.entry_date <= endISO;
         });
 
-        const labels = selectedFriendHabits.map((h) => h.name);
+        const sortedHabits = sortHabits(selectedFriendHabits);
+        const labels = sortedHabits.map((h) => h.name);
         const completionRates = [];
         const streaks = [];
 
-        let totalExpected = 0;
-        let totalDone = 0;
-        let bestStreak = 0;
+        const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const weekdayTotals = [0, 0, 0, 0, 0, 0, 0];
 
-        for (const habit of selectedFriendHabits) {
+        let totalScheduled = 0;
+        let totalCompletions = 0;
+
+        for (const habit of sortedHabits) {
           const habitCreated = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
           const effectiveStart = start ? new Date(Math.max(start, habitCreated)) : habitCreated;
-          const expected = expectedCompletionsForRange(habit, effectiveStart, end);
-          const done = scopedEntries.filter((e) => e.habit_id === habit.id).length;
-          const rate = expected > 0 ? Math.round((done / expected) * 100) : 0;
+          const scheduled = expectedCompletionsForRange(habit, effectiveStart, end);
+          const completed = scopedEntries.filter((e) => e.habit_id === habit.id && e.completed).length;
+          const rate = scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
 
-          completionRates.push(Math.min(100, Math.max(0, rate)));
-          totalExpected += expected;
-          totalDone += done;
+          totalScheduled += scheduled;
+          totalCompletions += completed;
+          completionRates.push(rate);
 
           const completedDates = new Set(selectedFriendEntries.filter((e) => e.habit_id === habit.id && e.completed).map((e) => e.entry_date));
           let streak = 0;
           let cursor = dateFromISO(todayISO());
-          const startBound = dateFromISO(formatDate(new Date(habit.created_at || Date.now())));
-          while (cursor >= startBound) {
+          while (cursor >= habitCreated) {
             const iso = formatDate(cursor);
             if (completedDates.has(iso)) {
               streak += 1;
@@ -2160,29 +2199,86 @@
             break;
           }
           streaks.push(streak);
-          bestStreak = Math.max(bestStreak, streak);
         }
 
-        const avgRate = totalExpected > 0 ? Math.round((totalDone / totalExpected) * 100) : 0;
-        friendAnalyticsSummary.textContent = `${selectedFriendHabits.length} shared habits | ${totalDone} completions | avg ${avgRate}% | best streak ${bestStreak}d`;
+        const trendStart = start || addDays(end, -89);
+        const days = [];
+        const byDay = new Map();
+        let cursor = new Date(trendStart);
+        while (cursor <= end) {
+          const iso = formatDate(cursor);
+          days.push(iso);
+          byDay.set(iso, 0);
+          cursor = addDays(cursor, 1);
+        }
 
-        friendAnalyticsChart = new Chart(friendAnalyticsChartEl, {
+        for (const e of scopedEntries) {
+          if (!e.completed) continue;
+          if (byDay.has(e.entry_date)) byDay.set(e.entry_date, (byDay.get(e.entry_date) || 0) + 1);
+          const weekdayIdx = (dateFromISO(e.entry_date).getDay() + 6) % 7;
+          weekdayTotals[weekdayIdx] += 1;
+        }
+
+        const trendValues = days.map((d) => byDay.get(d) || 0);
+        const rolling7 = movingAverage(trendValues, 7);
+        const rolling30 = movingAverage(trendValues, 30);
+
+        const daysWithAny = trendValues.filter((v) => v > 0).length;
+        const consistencyScore = trendValues.length ? Math.round((daysWithAny / trendValues.length) * 100) : 0;
+        const avgCompletionPct = totalScheduled > 0 ? Math.round((totalCompletions / totalScheduled) * 100) : 0;
+
+        const bestDayIdx = weekdayTotals.indexOf(Math.max(...weekdayTotals));
+        const worstDayIdx = weekdayTotals.indexOf(Math.min(...weekdayTotals));
+
+        renderSummaryInto(friendSummaryGrid, {
+          totalHabits: sortedHabits.length,
+          totalCompletions,
+          avgCompletionPct,
+          consistencyScore,
+          bestDay: weekdayNames[bestDayIdx] || "-",
+          worstDay: weekdayNames[worstDayIdx] || "-",
+        });
+
+        friendHabitRateChart = new Chart(document.getElementById("friend-habit-rate-chart"), {
           type: "bar",
           data: {
             labels,
+            datasets: [{ label: "Completion %", data: completionRates, backgroundColor: "rgba(194, 77, 44, 0.7)", borderColor: "rgba(194, 77, 44, 1)", borderWidth: 1 }],
+          },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } },
+        });
+
+        friendDailyTrendChart = new Chart(document.getElementById("friend-daily-trend-chart"), {
+          type: "line",
+          data: {
+            labels: days.map((d) => d.slice(5)),
+            datasets: [{ label: "Daily", data: trendValues, borderColor: "rgba(25, 122, 75, 1)", backgroundColor: "rgba(25, 122, 75, 0.2)", fill: true, tension: 0.3 }],
+          },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+        });
+
+        friendRollingChart = new Chart(document.getElementById("friend-rolling-chart"), {
+          type: "line",
+          data: {
+            labels: days.map((d) => d.slice(5)),
             datasets: [
-              {
-                label: "Completion %",
-                data: completionRates,
-                backgroundColor: "rgba(31, 42, 55, 0.75)",
-              },
+              { label: "7-day", data: rolling7, borderColor: "rgba(194, 77, 44, 1)", backgroundColor: "rgba(194, 77, 44, 0.08)", fill: false, tension: 0.25 },
+              { label: "30-day", data: rolling30, borderColor: "rgba(31, 42, 55, 0.9)", backgroundColor: "rgba(31, 42, 55, 0.08)", fill: false, tension: 0.25 },
             ],
           },
-          options: {
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, max: 100 } },
-          },
+          options: { plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } },
         });
+
+        friendStreakChart = new Chart(document.getElementById("friend-streak-chart"), {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{ label: "Current streak", data: streaks, backgroundColor: "rgba(31, 42, 55, 0.75)" }],
+          },
+          options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
+        });
+
+        renderHeatmapInto(selectedFriendEntries, friendHeatmapMonth, friendHeatmapGrid);
       }
 
       function beginEditHabit(habit) {
@@ -2618,7 +2714,7 @@
         }
         if (selectedFriendId === friendId) {
           selectedFriendId = null;
-          friendHabits.innerHTML = `<p class="empty">Select a friend to view shared habits.</p>`;
+          setSocialMainMode(false);
         }
         await syncFromServer();
         showToast("Friend removed", "success");
@@ -2737,6 +2833,7 @@
         analyticsRange.addEventListener("change", renderAnalytics);
         heatmapMonth.addEventListener("change", renderHeatmap);
         friendAnalyticsRange.addEventListener("change", renderFriendAnalytics);
+        friendHeatmapMonth.addEventListener("change", renderFriendAnalytics);
 
         habitTimeline.addEventListener("change", () => {
           updateCustomDaysVisibility();
@@ -2875,6 +2972,7 @@
           const target = event.target.closest("[data-action]");
           if (!target) return;
           if (target.dataset.action === "view-friend") {
+            setSocialMainMode(true);
             await loadFriendHabits(target.dataset.friendId);
             return;
           }
@@ -2885,6 +2983,10 @@
           if (target.dataset.action === "toggle-block-friend") {
             await toggleBlockFriend(target.dataset.friendId);
           }
+        });
+
+        friendAnalyticsBackBtn.addEventListener("click", () => {
+          setSocialMainMode(false);
         });
 
         settingsBlockedList.addEventListener("click", async (event) => {
@@ -2902,6 +3004,8 @@
 
         const now = new Date();
         heatmapMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        friendHeatmapMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        setSocialMainMode(false);
 
         bindTabs();
         bindEvents();
