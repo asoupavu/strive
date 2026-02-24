@@ -173,6 +173,18 @@
         font-size: 0.94rem;
       }
 
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+      }
+
+      .collapse-toggle {
+        min-width: 28px;
+        padding: 0.2rem 0.42rem;
+      }
+
       label {
         display: block;
         margin: 0.45rem 0 0.24rem;
@@ -194,6 +206,34 @@
       textarea {
         min-height: 56px;
         resize: vertical;
+      }
+
+      .tag-checklist {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.3rem;
+      }
+
+      .tag-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.3rem 0.45rem;
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .tag-check input {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+      }
+
+      .tag-check.checked {
+        border-color: var(--accent);
+        background: var(--accent-soft);
       }
 
       .row-2 {
@@ -682,8 +722,12 @@
       <section id="view-habits" class="panel">
         <div class="layout">
           <aside class="card">
-            <h2 id="habit-form-title" class="section-title">Add Habit</h2>
-            <form id="habit-form">
+            <div class="section-head">
+              <h2 id="habit-form-title" class="section-title" style="margin-bottom: 0">Add Habit</h2>
+              <button id="habit-form-toggle" type="button" class="btn btn-ghost btn-small collapse-toggle" aria-expanded="true" title="Collapse add habit panel">▾</button>
+            </div>
+            <div id="habit-form-wrap" style="margin-top: 0.56rem">
+              <form id="habit-form">
               <label for="habit-name">Name</label>
               <input id="habit-name" maxlength="80" required />
 
@@ -724,8 +768,8 @@
                 </div>
               </div>
 
-              <label for="habit-tags">Tags (select multiple)</label>
-              <select id="habit-tags" multiple size="6"></select>
+              <label for="habit-tags">Tags</label>
+              <div id="habit-tags" class="tag-checklist"></div>
 
               <div style="display: flex; gap: 0.35rem; margin-top: 0.6rem">
                 <button id="habit-submit-btn" class="btn btn-primary" type="submit" style="flex: 1">Create habit</button>
@@ -733,7 +777,8 @@
               </div>
               <p class="helper">Tip: Click a day to toggle completion. Save notes per day below each habit.</p>
               <div id="form-status" class="status"></div>
-            </form>
+              </form>
+            </div>
           </aside>
 
           <main class="card">
@@ -1025,6 +1070,8 @@
       const filterStatus = document.getElementById("filter-status");
 
       const habitFormTitle = document.getElementById("habit-form-title");
+      const habitFormWrap = document.getElementById("habit-form-wrap");
+      const habitFormToggle = document.getElementById("habit-form-toggle");
       const habitSubmitBtn = document.getElementById("habit-submit-btn");
       const habitCancelBtn = document.getElementById("habit-cancel-btn");
       const habitTimeline = document.getElementById("habit-timeline");
@@ -1101,6 +1148,7 @@
       let entries = [];
       let viewWeekStart = new Date();
       let editingHabitId = null;
+      let isHabitFormCollapsed = false;
       let selectedNoteDayByHabit = new Map();
 
       let requests = [];
@@ -1177,15 +1225,25 @@
           .replace(/'/g, "&#039;");
       }
 
-      function selectedValues(selectEl) {
-        return Array.from(selectEl.selectedOptions).map((o) => o.value);
+      function selectedTagValues() {
+        return Array.from(document.querySelectorAll("#habit-tags input[type='checkbox']:checked")).map((el) => el.value);
       }
 
-      function applyMultiSelectValues(selectEl, values) {
+      function applyTagValues(values) {
         const set = new Set(values || []);
-        Array.from(selectEl.options).forEach((o) => {
-          o.selected = set.has(o.value);
+        Array.from(document.querySelectorAll("#habit-tags .tag-check")).forEach((labelEl) => {
+          const inputEl = labelEl.querySelector("input[type='checkbox']");
+          if (!inputEl) return;
+          inputEl.checked = set.has(inputEl.value);
+          labelEl.classList.toggle("checked", inputEl.checked);
         });
+      }
+
+      function setHabitFormCollapsed(collapsed) {
+        isHabitFormCollapsed = collapsed;
+        habitFormWrap.style.display = collapsed ? "none" : "block";
+        habitFormToggle.textContent = collapsed ? "▸" : "▾";
+        habitFormToggle.setAttribute("aria-expanded", String(!collapsed));
       }
 
       function initStaticSelections() {
@@ -1193,7 +1251,8 @@
         cat.innerHTML = CATEGORY_OPTIONS.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
 
         const tags = document.getElementById("habit-tags");
-        tags.innerHTML = TAG_OPTIONS.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+        tags.innerHTML = TAG_OPTIONS.map((t) => `<label class="tag-check"><input type="checkbox" value="${escapeHtml(t)}" /><span>${escapeHtml(t)}</span></label>`).join("");
+        applyTagValues([]);
       }
 
       function setStatus(el, msg) {
@@ -2283,6 +2342,7 @@
 
       function beginEditHabit(habit) {
         editingHabitId = habit.id;
+        setHabitFormCollapsed(false);
         habitFormTitle.textContent = "Edit Habit";
         habitSubmitBtn.textContent = "Save changes";
         habitCancelBtn.style.display = "inline-block";
@@ -2296,7 +2356,7 @@
         document.getElementById("habit-timeline").value = timeline;
         document.getElementById("habit-custom-days").value = String(cadence === 7 || cadence === 14 ? 21 : cadence);
         updateCustomDaysVisibility();
-        applyMultiSelectValues(document.getElementById("habit-tags"), habit.tags || []);
+        applyTagValues(habit.tags || []);
       }
 
       function resetHabitForm() {
@@ -2307,7 +2367,7 @@
         document.getElementById("habit-custom-days").value = "21";
         updateCustomDaysVisibility();
         document.getElementById("habit-category").value = CATEGORY_OPTIONS[0];
-        applyMultiSelectValues(document.getElementById("habit-tags"), []);
+        applyTagValues([]);
 
         habitFormTitle.textContent = "Add Habit";
         habitSubmitBtn.textContent = "Create habit";
@@ -2326,7 +2386,7 @@
         const timelineMode = document.getElementById("habit-timeline").value;
         const customDays = Number(document.getElementById("habit-custom-days").value);
         const cadenceDays = timelineMode === "weekly" ? 7 : timelineMode === "biweekly" ? 14 : customDays;
-        const tags = selectedValues(document.getElementById("habit-tags"));
+        const tags = selectedTagValues();
 
         if (!name) {
           setStatus(formStatus, "Name is required.");
@@ -2841,6 +2901,16 @@
 
         habitForm.addEventListener("submit", handleCreateOrUpdateHabit);
         habitCancelBtn.addEventListener("click", resetHabitForm);
+        habitFormToggle.addEventListener("click", () => {
+          setHabitFormCollapsed(!isHabitFormCollapsed);
+        });
+
+        document.getElementById("habit-tags").addEventListener("change", (event) => {
+          const inputEl = event.target.closest("input[type='checkbox']");
+          if (!inputEl) return;
+          const row = inputEl.closest(".tag-check");
+          if (row) row.classList.toggle("checked", inputEl.checked);
+        });
 
         habitList.addEventListener("change", (event) => {
           const select = event.target.closest("select[data-action='note-day']");
@@ -3010,6 +3080,7 @@
         bindTabs();
         bindEvents();
         initStaticSelections();
+        setHabitFormCollapsed(false);
         setupRealtime();
         window.addEventListener("beforeunload", teardownRealtime);
 
