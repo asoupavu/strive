@@ -161,6 +161,18 @@
         gap: 0.7rem;
       }
 
+      .layout.habit-panel-collapsed {
+        grid-template-columns: 52px 1fr;
+      }
+
+      .layout.habit-panel-collapsed .section-head {
+        justify-content: center;
+      }
+
+      .layout.habit-panel-collapsed #habit-form-title {
+        display: none;
+      }
+
       .card {
         background: #fff;
         border: 1px solid var(--border);
@@ -667,6 +679,10 @@
           grid-template-columns: 1fr;
         }
 
+        .layout.habit-panel-collapsed {
+          grid-template-columns: 1fr;
+        }
+
         .settings-grid {
           grid-template-columns: 1fr;
         }
@@ -720,11 +736,11 @@
       </div>
 
       <section id="view-habits" class="panel">
-        <div class="layout">
-          <aside class="card">
+        <div id="habits-layout" class="layout">
+          <aside class="card" id="habit-form-card">
             <div class="section-head">
               <h2 id="habit-form-title" class="section-title" style="margin-bottom: 0">Add Habit</h2>
-              <button id="habit-form-toggle" type="button" class="btn btn-ghost btn-small collapse-toggle" aria-expanded="true" title="Collapse add habit panel">▾</button>
+              <button id="habit-form-toggle" type="button" class="btn btn-ghost btn-small collapse-toggle" aria-expanded="true" title="Collapse add habit panel">◂</button>
             </div>
             <div id="habit-form-wrap" style="margin-top: 0.56rem">
               <form id="habit-form">
@@ -1025,6 +1041,14 @@
                 <input id="setting-sync-hint" type="checkbox" style="width: 18px; height: 18px" />
               </div>
 
+              <div class="setting-row">
+                <div>
+                  <p class="setting-title">Collapse add habit panel</p>
+                  <p class="setting-sub">Save more room for habits by collapsing the left panel.</p>
+                </div>
+                <input id="setting-collapse-habit-panel" type="checkbox" style="width: 18px; height: 18px" />
+              </div>
+
               <div class="setting-row" style="align-items: flex-start">
                 <div>
                   <p class="setting-title">see blocked people</p>
@@ -1068,6 +1092,7 @@
       const filterCategory = document.getElementById("filter-category");
       const filterVisibility = document.getElementById("filter-visibility");
       const filterStatus = document.getElementById("filter-status");
+      const habitsLayout = document.getElementById("habits-layout");
 
       const habitFormTitle = document.getElementById("habit-form-title");
       const habitFormWrap = document.getElementById("habit-form-wrap");
@@ -1103,6 +1128,7 @@
       const settingDefaultRange = document.getElementById("setting-default-range");
       const settingStartTab = document.getElementById("setting-start-tab");
       const settingSyncHint = document.getElementById("setting-sync-hint");
+      const settingCollapseHabitPanel = document.getElementById("setting-collapse-habit-panel");
       const settingToggleBlocked = document.getElementById("setting-toggle-blocked");
       const settingsBlockedWrap = document.getElementById("settings-blocked-wrap");
       const settingsBlockedList = document.getElementById("settings-blocked-list");
@@ -1140,6 +1166,7 @@
         defaultAnalyticsRange: "30",
         defaultStartTab: "habits",
         showSyncHint: true,
+        collapseHabitPanel: false,
       };
 
       let currentUser = null;
@@ -1241,9 +1268,11 @@
 
       function setHabitFormCollapsed(collapsed) {
         isHabitFormCollapsed = collapsed;
+        habitsLayout.classList.toggle("habit-panel-collapsed", collapsed);
         habitFormWrap.style.display = collapsed ? "none" : "block";
-        habitFormToggle.textContent = collapsed ? "▸" : "▾";
+        habitFormToggle.textContent = collapsed ? "▸" : "◂";
         habitFormToggle.setAttribute("aria-expanded", String(!collapsed));
+        settingCollapseHabitPanel.checked = collapsed;
       }
 
       function initStaticSelections() {
@@ -1358,6 +1387,7 @@
             ? s.defaultStartTab
             : DEFAULT_SETTINGS.defaultStartTab,
           showSyncHint: typeof s.showSyncHint === "boolean" ? s.showSyncHint : DEFAULT_SETTINGS.showSyncHint,
+          collapseHabitPanel: typeof s.collapseHabitPanel === "boolean" ? s.collapseHabitPanel : DEFAULT_SETTINGS.collapseHabitPanel,
         };
       }
 
@@ -1380,6 +1410,7 @@
         document.body.classList.toggle("hide-progress", !userSettings.showProgressBars);
 
         syncHint.style.display = userSettings.showSyncHint ? "inline" : "none";
+        setHabitFormCollapsed(!!userSettings.collapseHabitPanel);
       }
 
       function hydrateSettingsControls() {
@@ -1392,6 +1423,7 @@
         settingDefaultRange.value = userSettings.defaultAnalyticsRange;
         settingStartTab.value = userSettings.defaultStartTab;
         settingSyncHint.checked = userSettings.showSyncHint;
+        settingCollapseHabitPanel.checked = userSettings.collapseHabitPanel;
         settingsHydrating = false;
       }
 
@@ -2902,7 +2934,9 @@
         habitForm.addEventListener("submit", handleCreateOrUpdateHabit);
         habitCancelBtn.addEventListener("click", resetHabitForm);
         habitFormToggle.addEventListener("click", () => {
-          setHabitFormCollapsed(!isHabitFormCollapsed);
+          const next = !isHabitFormCollapsed;
+          setHabitFormCollapsed(next);
+          if (!settingsHydrating) updateSetting("collapseHabitPanel", next);
         });
 
         document.getElementById("habit-tags").addEventListener("change", (event) => {
@@ -3019,6 +3053,9 @@
         settingSyncHint.addEventListener("change", () => {
           if (!settingsHydrating) updateSetting("showSyncHint", settingSyncHint.checked);
         });
+        settingCollapseHabitPanel.addEventListener("change", () => {
+          if (!settingsHydrating) updateSetting("collapseHabitPanel", settingCollapseHabitPanel.checked);
+        });
         settingToggleBlocked.addEventListener("click", () => {
           const showing = settingsBlockedWrap.style.display !== "none";
           settingsBlockedWrap.style.display = showing ? "none" : "block";
@@ -3080,7 +3117,6 @@
         bindTabs();
         bindEvents();
         initStaticSelections();
-        setHabitFormCollapsed(false);
         setupRealtime();
         window.addEventListener("beforeunload", teardownRealtime);
 
