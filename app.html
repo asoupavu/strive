@@ -1514,6 +1514,20 @@
         document.body.classList.toggle("loading", loadingCounter > 0);
       }
 
+      async function withTimeout(promise, timeoutMs, timeoutMessage) {
+        let timeoutId;
+        const timeout = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error(timeoutMessage || "Request timed out."));
+          }, timeoutMs);
+        });
+        try {
+          return await Promise.race([promise, timeout]);
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      }
+
       async function withLoading(fn) {
         setLoading(true);
         try {
@@ -1859,14 +1873,42 @@
       }
 
       async function requireUser() {
-        const { data, error } = await supabase.auth.getUser();
-        if (error || !data.user) {
-          window.location.href = "/login";
+        try {
+          const { data: sessionData, error: sessionError } = await withTimeout(
+            supabase.auth.getSession(),
+            12000,
+            "Session check timed out.",
+          );
+
+          if (sessionError || !sessionData.session?.user) {
+            window.location.href = "/login";
+            return null;
+          }
+
+          currentUser = sessionData.session.user;
+          userLine.textContent = `Logged in as ${currentUser.email}`;
+
+          // Validate token in background without blocking app startup.
+          void withTimeout(supabase.auth.getUser(), 12000, "User validation timed out.")
+            .then(({ data, error }) => {
+              if (!error && data?.user) return;
+              void supabase.auth.signOut().finally(() => {
+                window.location.href = "/login";
+              });
+            })
+            .catch(() => {
+              // Keep active session if background validation times out.
+            });
+
+          return currentUser;
+        } catch (error) {
+          setStatus(formStatus, "Unable to verify session. Redirecting to login...");
+          userLine.textContent = "Session check failed.";
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 900);
           return null;
         }
-        currentUser = data.user;
-        userLine.textContent = `Logged in as ${currentUser.email}`;
-        return data.user;
       }
 
       async function ensureProfile() {
