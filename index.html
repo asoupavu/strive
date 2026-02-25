@@ -102,7 +102,7 @@
 
         if (!isRecovery) return;
 
-        const target = `/reset-password.html${window.location.search || ""}${window.location.hash || ""}`;
+        const target = `/reset-password${window.location.search || ""}${window.location.hash || ""}`;
         window.location.replace(target);
       })();
     </script>
@@ -117,8 +117,8 @@
       <p>Track your routines, review your progress, and stay accountable with friends while keeping private habits private.</p>
 
       <div class="actions">
-        <a class="btn" href="/login.html">Log In</a>
-        <a class="btn primary" href="/signup.html">Create Account</a>
+        <a class="btn" href="/login">Log In</a>
+        <a class="btn primary" href="/signup">Create Account</a>
       </div>
     </main>
   </body>

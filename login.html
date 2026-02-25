@@ -119,10 +119,10 @@
 
       <div id="status"></div>
       <div class="link-row">
-        <a href="/forgot-password.html">Forgot password?</a>
+        <a href="/forgot-password">Forgot password?</a>
       </div>
       <div class="link-row">
-        New here? <a href="/signup.html">Create an account</a>
+        New here? <a href="/signup">Create an account</a>
       </div>
     </main>
 
@@ -141,10 +141,21 @@
       }
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const queryParams = new URLSearchParams(window.location.search || "");
+      const emailVerified = queryParams.get("email_verified") === "1";
+
+      if (emailVerified) {
+        setStatus("Email Verified!");
+        window.history.replaceState({}, "", window.location.pathname);
+      }
 
       const { data: existingSession } = await supabase.auth.getSession();
       if (existingSession.session) {
-        window.location.href = "/app.html";
+        if (emailVerified) {
+          await supabase.auth.signOut();
+        } else {
+          window.location.href = "/app";
+        }
       }
 
       formEl.addEventListener("submit", async (event) => {
@@ -166,7 +177,7 @@
         }
 
         setStatus("Success. Redirecting...");
-        window.location.href = "/app.html";
+        window.location.href = "/app";
       });
     </script>
   </body>

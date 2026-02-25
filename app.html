@@ -1864,7 +1864,7 @@
       async function requireUser() {
         const { data, error } = await supabase.auth.getUser();
         if (error || !data.user) {
-          window.location.href = "/login.html";
+          window.location.href = "/login";
           return null;
         }
         currentUser = data.user;
@@ -3347,7 +3347,7 @@
         document.getElementById("logout-btn").addEventListener("click", async () => {
           teardownRealtime();
           await supabase.auth.signOut();
-          window.location.href = "/login.html";
+          window.location.href = "/login";
         });
 
         document.getElementById("refresh-btn").addEventListener("click", () =>

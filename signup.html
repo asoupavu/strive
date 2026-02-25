@@ -119,7 +119,7 @@
 
       <div id="status"></div>
       <div class="link-row">
-        Already have an account? <a href="/login.html">Go to log in</a>
+        Already have an account? <a href="/login">Go to log in</a>
       </div>
     </main>
 
@@ -132,6 +132,7 @@
       const statusEl = document.getElementById("status");
       const formEl = document.getElementById("signup-form");
       const signupBtn = document.getElementById("signup-btn");
+      const emailVerificationRedirect = `${window.location.origin}/login?email_verified=1`;
 
       const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -141,7 +142,7 @@
 
       const { data: existingSession } = await supabase.auth.getSession();
       if (existingSession.session) {
-        window.location.href = "/app.html";
+        window.location.href = "/app";
       }
 
       formEl.addEventListener("submit", async (event) => {
@@ -153,7 +154,13 @@
         signupBtn.disabled = true;
         setStatus("Creating account...");
 
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: emailVerificationRedirect,
+          },
+        });
 
         signupBtn.disabled = false;
 
