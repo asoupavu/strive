@@ -124,17 +124,13 @@
     </main>
 
     <script type="module">
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
+      import { getEmailVerificationRedirectUrl, getSupabaseClient } from "/src/lib/supabase.js";
 
       const statusEl = document.getElementById("status");
       const formEl = document.getElementById("signup-form");
       const signupBtn = document.getElementById("signup-btn");
-      const emailVerificationRedirect = `${window.location.origin}/login?email_verified=1`;
-
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const emailVerificationRedirect = getEmailVerificationRedirectUrl();
+      const supabase = getSupabaseClient();
 
       function setStatus(message) {
         statusEl.textContent = message;

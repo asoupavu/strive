@@ -1253,12 +1253,9 @@
     <div id="toast-wrap" class="toast-wrap"></div>
 
     <script type="module">
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+      import { getSupabaseClient } from "/src/lib/supabase.js";
 
-      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
-
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabase = getSupabaseClient();
 
       const userLine = document.getElementById("user-line");
       const formStatus = document.getElementById("form-status");

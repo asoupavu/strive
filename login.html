@@ -127,10 +127,7 @@
     </main>
 
     <script type="module">
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-      const SUPABASE_URL = "https://jlrlwfpbrxlitdiobkgy.supabase.co";
-      const SUPABASE_ANON_KEY = "sb_publishable_43K-wSq-e_datCcSKN9yzA_tkWeAW0h";
+      import { getSupabaseClient } from "/src/lib/supabase.js";
 
       const statusEl = document.getElementById("status");
       const formEl = document.getElementById("login-form");
@@ -140,7 +137,7 @@
         statusEl.textContent = message;
       }
 
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const supabase = getSupabaseClient();
       const queryParams = new URLSearchParams(window.location.search || "");
       const emailVerified = queryParams.get("email_verified") === "1";
 
